@@ -1,4 +1,11 @@
-import os, json, math, urllib.request, urllib.parse
+import os
+import json
+import math
+import urllib.request
+import urllib.parse
+from dotenv import load_dotenv
+
+load_dotenv()
 
 CLIENT_ID = os.environ["STRAVA_CLIENT_ID"]
 CLIENT_SECRET = os.environ["STRAVA_CLIENT_SECRET"]
@@ -21,18 +28,50 @@ def post_form(url, data):
 
 def get_json(url, headers=None):
     req = urllib.request.Request(url, headers=headers or {})
-    with urllib.request.urlopen(req) as r:
-        return json.loads(r.read().decode("utf-8"))
+    try:
+        with urllib.request.urlopen(req) as r:
+            return json.loads(r.read().decode("utf-8"))
+    except urllib.error.HTTPError as e:
+        body = e.read().decode("utf-8", errors="replace")
+        raise RuntimeError(f"HTTP {e.code} on {url}: {body}") from e
+
+
+def load_refresh_token():
+    """Use saved refresh token if available, otherwise fall back to env var."""
+    if os.path.exists(STATE_PATH):
+        with open(STATE_PATH, "r", encoding="utf-8") as f:
+            state = json.load(f)
+        saved = state.get("refresh_token")
+        if saved:
+            return saved
+    return REFRESH_TOKEN
 
 
 def refresh_access_token():
-    tok = post_form("https://www.strava.com/oauth/token", {
-        "client_id": CLIENT_ID,
-        "client_secret": CLIENT_SECRET,
-        "grant_type": "refresh_token",
-        "refresh_token": REFRESH_TOKEN,
-    })
+    tok = post_form(
+        "https://www.strava.com/oauth/token",
+        {
+            "client_id": CLIENT_ID,
+            "client_secret": CLIENT_SECRET,
+            "grant_type": "refresh_token",
+            "refresh_token": load_refresh_token(),
+        },
+    )
+    if "access_token" not in tok:
+        raise RuntimeError(f"Token refresh failed: {tok}")
+    # Strava rotates refresh tokens — persist the new one for next run
+    if "refresh_token" in tok:
+        _save_refresh_token(tok["refresh_token"])
     return tok["access_token"]
+
+
+def _save_refresh_token(new_token):
+    state = {}
+    if os.path.exists(STATE_PATH):
+        with open(STATE_PATH, "r", encoding="utf-8") as f:
+            state = json.load(f)
+    state["refresh_token"] = new_token
+    save_json(STATE_PATH, state)
 
 
 def save_json(path, obj):
@@ -44,8 +83,13 @@ def save_json(path, obj):
 def get_recent_activities(access_token):
     acts = []
     for page in range(1, 6):
-        url = f"https://www.strava.com/api/v3/athlete/activities?per_page=50&page={page}"
-        acts.extend(get_json(url, headers={"Authorization": f"Bearer {access_token}"}))
+        url = (
+            f"https://www.strava.com/api/v3/athlete/activities?per_page=50&page={page}"
+        )
+        batch = get_json(url, headers={"Authorization": f"Bearer {access_token}"})
+        if not batch:
+            break
+        acts.extend(batch)
     return acts
 
 
@@ -64,7 +108,10 @@ def haversine_m(lat1, lon1, lat2, lon2):
     phi2 = math.radians(lat2)
     dphi = math.radians(lat2 - lat1)
     dl = math.radians(lon2 - lon1)
-    a = math.sin(dphi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(dl / 2) ** 2
+    a = (
+        math.sin(dphi / 2) ** 2
+        + math.cos(phi1) * math.cos(phi2) * math.sin(dl / 2) ** 2
+    )
     return 2 * R * math.asin(math.sqrt(a))
 
 
@@ -96,7 +143,11 @@ def main():
     for a in activities:
         act_id = int(a["id"])
 
-        streams = get_stream(access, act_id)
+        try:
+            streams = get_stream(access, act_id)
+        except RuntimeError as e:
+            print(f"Skipping activity {act_id} ({a.get('name', '?')}): {e}")
+            continue
 
         latlng = streams.get("latlng", {}).get("data", [])
         if not latlng or len(latlng) < 2:
@@ -153,10 +204,10 @@ def main():
                 "type": a.get("type", ""),
                 "elevation_gain_m": float(total_up),
                 # Profil-Daten (für Popup-Chart)
-                "profile_dist_m": dist_m_ds,    # x
-                "profile_elev_m": elev_m_ds,    # y
+                "profile_dist_m": dist_m_ds,  # x
+                "profile_elev_m": elev_m_ds,  # y
             },
-            "geometry": {"type": "LineString", "coordinates": coords}
+            "geometry": {"type": "LineString", "coordinates": coords},
         }
 
         track["features"].append(feature)
@@ -176,7 +227,13 @@ def main():
     if latest:
         save_json(LATEST_PATH, latest)
 
-    save_json(STATE_PATH, {"seen_ids": sorted(kept_ids)})
+    # Preserve refresh_token when updating state
+    state = {}
+    if os.path.exists(STATE_PATH):
+        with open(STATE_PATH, "r", encoding="utf-8") as f:
+            state = json.load(f)
+    state["seen_ids"] = sorted(kept_ids)
+    save_json(STATE_PATH, state)
 
     print(f"Wrote {len(track['features'])} activities to {TRACK_PATH}.")
     if not latest:
@@ -185,3 +242,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
