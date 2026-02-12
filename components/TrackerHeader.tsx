@@ -1,0 +1,49 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+interface TrackerHeaderProps {
+  slug: string;
+  displayName: string;
+  lighterpackUrl?: string | null;
+}
+
+export default function TrackerHeader({ slug, displayName, lighterpackUrl }: TrackerHeaderProps) {
+  const pathname = usePathname();
+  const base = `/tracker/${slug}`;
+
+  const tabs = [
+    { label: "Map", href: base },
+    { label: "Photos", href: `${base}/photos` },
+    { label: "Updates", href: `${base}/updates` },
+  ];
+
+  return (
+    <header className="site-header">
+      <div className="wrap" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "14px var(--pad)" }}>
+        <div className="brand">
+          <div className="brand-title">{displayName}&apos;s PCT Tracker</div>
+          <div className="brand-sub">Pacific Crest Trail</div>
+        </div>
+
+        <nav className="tabs">
+          {tabs.map((t) => (
+            <Link
+              key={t.href}
+              href={t.href}
+              className={`tab ${pathname === t.href ? "active" : ""}`}
+            >
+              {t.label}
+            </Link>
+          ))}
+          {lighterpackUrl && (
+            <a href={lighterpackUrl} target="_blank" rel="noopener noreferrer" className="tab">
+              Gear
+            </a>
+          )}
+        </nav>
+      </div>
+    </header>
+  );
+}
