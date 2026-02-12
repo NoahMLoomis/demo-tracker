@@ -132,10 +132,42 @@ def save_json(path, obj):
         json.dump(obj, f, indent=2)
 
 
+def _point_to_segment_m(lat, lon, lat1, lon1, lat2, lon2):
+    """Min distance (m) from point to the line segment (lat1,lon1)-(lat2,lon2).
+
+    Uses a local plane approximation (cos-lat corrected) to project the point
+    onto the segment, then haversine for the actual distance. Accurate enough
+    for segments under ~200 km.
+    """
+    # Local plane: treat lat as y, lon*cos(mid_lat) as x
+    mid_lat = math.radians((lat1 + lat2) / 2)
+    cos_lat = math.cos(mid_lat)
+
+    # Segment vector
+    dx = (lon2 - lon1) * cos_lat
+    dy = lat2 - lat1
+
+    seg_len_sq = dx * dx + dy * dy
+    if seg_len_sq == 0:
+        return haversine_m(lat, lon, lat1, lon1)
+
+    # Project point onto segment, clamp t to [0, 1]
+    px = (lon - lon1) * cos_lat
+    py = lat - lat1
+    t = max(0.0, min(1.0, (px * dx + py * dy) / seg_len_sq))
+
+    # Closest point on segment
+    clat = lat1 + t * (lat2 - lat1)
+    clon = lon1 + t * (lon2 - lon1)
+    return haversine_m(lat, lon, clat, clon)
+
+
 def is_near_pct(lat, lon):
-    """Return True if the point is within PCT_PROXIMITY_M of any PCT waypoint."""
-    for wlat, wlon in PCT_WAYPOINTS:
-        if haversine_m(lat, lon, wlat, wlon) <= PCT_PROXIMITY_M:
+    """Return True if the point is within PCT_PROXIMITY_M of any PCT segment."""
+    for i in range(len(PCT_WAYPOINTS) - 1):
+        w1 = PCT_WAYPOINTS[i]
+        w2 = PCT_WAYPOINTS[i + 1]
+        if _point_to_segment_m(lat, lon, w1[0], w1[1], w2[0], w2[1]) <= PCT_PROXIMITY_M:
             return True
     return False
 
