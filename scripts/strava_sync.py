@@ -18,6 +18,58 @@ STATE_PATH = "data/strava_state.json"
 # Wie viele Punkte fürs Höhenprofil maximal gespeichert werden (Dateigröße!)
 PROFILE_MAX_POINTS = 220
 
+# Max distance (metres) from a PCT waypoint to count as "on trail"
+PCT_PROXIMITY_M = 15000  # 15 km
+
+# Simplified PCT centerline: ~40 waypoints from Campo, CA to Manning Park, BC
+PCT_WAYPOINTS = [
+    (32.59, -116.47),  # Campo (southern terminus)
+    (32.87, -116.51),  # Mount Laguna
+    (33.28, -116.64),  # Warner Springs
+    (33.74, -116.69),  # Idyllwild
+    (33.93, -116.83),  # San Jacinto
+    (34.24, -116.87),  # Big Bear
+    (34.32, -117.44),  # Cajon Pass
+    (34.36, -117.63),  # Wrightwood
+    (34.37, -117.99),  # Mt Baden-Powell
+    (34.49, -118.32),  # Agua Dulce
+    (34.82, -118.72),  # Lake Hughes
+    (35.13, -118.45),  # Tehachapi
+    (35.67, -118.23),  # Kennedy Meadows South
+    (36.07, -118.11),  # Kennedy Meadows
+    (36.58, -118.29),  # Mt Whitney / Crabtree
+    (36.77, -118.42),  # Forester Pass
+    (37.08, -118.66),  # Muir Pass
+    (37.38, -118.80),  # Evolution Valley
+    (37.65, -119.04),  # Mammoth Lakes
+    (37.87, -119.34),  # Tuolumne Meadows
+    (38.33, -119.64),  # Sonora Pass
+    (38.72, -119.93),  # Carson Pass
+    (38.94, -120.04),  # South Lake Tahoe
+    (39.32, -120.33),  # Donner Pass
+    (39.57, -120.64),  # Sierra City
+    (39.96, -121.25),  # Belden
+    (40.49, -121.51),  # Lassen area
+    (41.01, -121.65),  # Burney Falls
+    (41.17, -122.32),  # Castle Crags
+    (41.31, -122.31),  # Mt Shasta area
+    (41.46, -122.89),  # Etna
+    (41.84, -123.23),  # Seiad Valley
+    (42.19, -122.71),  # Ashland, OR
+    (42.87, -122.17),  # Crater Lake
+    (43.35, -122.04),  # Shelter Cove
+    (43.83, -121.76),  # Bend area
+    (44.42, -121.87),  # Santiam Pass
+    (45.33, -121.71),  # Timberline Lodge
+    (45.67, -121.90),  # Cascade Locks
+    (46.65, -121.39),  # White Pass, WA
+    (47.39, -121.41),  # Snoqualmie Pass
+    (47.75, -121.09),  # Stevens Pass
+    (48.33, -120.69),  # Stehekin
+    (48.52, -120.74),  # Rainy Pass
+    (49.06, -121.05),  # Manning Park (northern terminus)
+]
+
 
 def post_form(url, data):
     encoded = urllib.parse.urlencode(data).encode("utf-8")
@@ -80,6 +132,14 @@ def save_json(path, obj):
         json.dump(obj, f, indent=2)
 
 
+def is_near_pct(lat, lon):
+    """Return True if the point is within PCT_PROXIMITY_M of any PCT waypoint."""
+    for wlat, wlon in PCT_WAYPOINTS:
+        if haversine_m(lat, lon, wlat, wlon) <= PCT_PROXIMITY_M:
+            return True
+    return False
+
+
 def get_recent_activities(access_token):
     acts = []
     for page in range(1, 6):
@@ -140,8 +200,15 @@ def main():
     latest = None
     kept_ids = []
 
+    skipped = 0
     for a in activities:
         act_id = int(a["id"])
+
+        # Quick proximity check using start coordinates (avoids stream fetch)
+        start = a.get("start_latlng")
+        if start and len(start) == 2 and not is_near_pct(start[0], start[1]):
+            skipped += 1
+            continue
 
         try:
             streams = get_stream(access, act_id)
@@ -235,7 +302,8 @@ def main():
     state["seen_ids"] = sorted(kept_ids)
     save_json(STATE_PATH, state)
 
-    print(f"Wrote {len(track['features'])} activities to {TRACK_PATH}.")
+    print(f"Wrote {len(track['features'])} PCT activities to {TRACK_PATH} "
+          f"({skipped} non-PCT skipped).")
     if not latest:
         print("No GPS streams found (check Strava privacy/scope).")
 
