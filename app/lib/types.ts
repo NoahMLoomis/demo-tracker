@@ -4,8 +4,7 @@ export interface User {
   display_name: string;
   slug: string;
   profile_image_url: string | null;
-  flickr_user_id: string | null;
-  flickr_photoset_id: string | null;
+
   lighterpack_url: string | null;
   strava_access_token: string;
   strava_refresh_token: string;

@@ -5,8 +5,7 @@ create table users (
   display_name text not null,
   slug text unique not null,
   profile_image_url text,
-  flickr_user_id text,
-  flickr_photoset_id text,
+
   lighterpack_url text,
   strava_access_token text not null,
   strava_refresh_token text not null,

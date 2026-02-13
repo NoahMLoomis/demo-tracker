@@ -15,7 +15,6 @@ export default function TrackerHeader({ slug, displayName, lighterpackUrl }: Tra
 
   const tabs = [
     { label: "Map", href: base },
-    { label: "Photos", href: `${base}/photos` },
     { label: "Updates", href: `${base}/updates` },
   ];
 

@@ -29,8 +29,6 @@ export async function POST(request: NextRequest) {
     updates.slug = slug;
   }
 
-  if (body.flickr_user_id !== undefined) updates.flickr_user_id = body.flickr_user_id;
-  if (body.flickr_photoset_id !== undefined) updates.flickr_photoset_id = body.flickr_photoset_id;
   if (body.lighterpack_url !== undefined) updates.lighterpack_url = body.lighterpack_url;
 
   await supabase.from("users").update(updates).eq("id", session.userId);

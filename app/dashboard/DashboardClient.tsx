@@ -12,8 +12,6 @@ export default function DashboardClient({ user, syncState }: DashboardClientProp
   const [syncing, setSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState<string | null>(null);
   const [slug, setSlug] = useState(user.slug);
-  const [flickrUserId, setFlickrUserId] = useState(user.flickr_user_id || "");
-  const [flickrPhotosetId, setFlickrPhotosetId] = useState(user.flickr_photoset_id || "");
   const [lighterpackUrl, setLighterpackUrl] = useState(user.lighterpack_url || "");
   const [saving, setSaving] = useState(false);
 
@@ -40,7 +38,7 @@ export default function DashboardClient({ user, syncState }: DashboardClientProp
       await fetch("/api/settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slug, flickr_user_id: flickrUserId || null, flickr_photoset_id: flickrPhotosetId || null, lighterpack_url: lighterpackUrl || null }),
+        body: JSON.stringify({ slug, lighterpack_url: lighterpackUrl || null }),
       });
     } catch { /* ignore */ }
     setSaving(false);
@@ -73,26 +71,6 @@ export default function DashboardClient({ user, syncState }: DashboardClientProp
               type="text"
               value={slug}
               onChange={(e) => setSlug(e.target.value)}
-              style={{ display: "block", width: "100%", marginTop: 4, padding: "8px 10px", borderRadius: 10, border: "1px solid var(--line)", background: "var(--card)", color: "var(--text)" }}
-            />
-          </label>
-          <label>
-            <span className="muted small">Flickr User ID</span>
-            <input
-              type="text"
-              value={flickrUserId}
-              onChange={(e) => setFlickrUserId(e.target.value)}
-              placeholder="e.g. 35469735@N03"
-              style={{ display: "block", width: "100%", marginTop: 4, padding: "8px 10px", borderRadius: 10, border: "1px solid var(--line)", background: "var(--card)", color: "var(--text)" }}
-            />
-          </label>
-          <label>
-            <span className="muted small">Flickr Photoset ID</span>
-            <input
-              type="text"
-              value={flickrPhotosetId}
-              onChange={(e) => setFlickrPhotosetId(e.target.value)}
-              placeholder="e.g. 72177720331905792"
               style={{ display: "block", width: "100%", marginTop: 4, padding: "8px 10px", borderRadius: 10, border: "1px solid var(--line)", background: "var(--card)", color: "var(--text)" }}
             />
           </label>

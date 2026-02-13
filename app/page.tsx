@@ -34,7 +34,7 @@ export default function LandingPage() {
               <li>Connect your Strava account</li>
               <li>Your PCT activities are synced automatically</li>
               <li>Get a public tracker page with a live map, stats, and insights</li>
-              <li>Optionally add Flickr photos and a Lighterpack gear list</li>
+              <li>Optionally add a Lighterpack gear list</li>
             </ol>
           </div>
         </div>
