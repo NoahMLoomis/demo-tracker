@@ -1,9 +1,6 @@
 import { createServiceClient } from "./supabase/server";
-import { refreshAccessToken, fetchActivities, fetchStreams } from "./strava";
+import { refreshAccessToken, fetchActivities } from "./strava";
 import { isNearPct } from "./pct-filter";
-import { haversineM, downsampleSeries } from "./geo";
-
-const PROFILE_MAX_POINTS = 220;
 
 export async function syncUser(userId: string): Promise<{ added: number; skipped: number }> {
   const supabase = createServiceClient();
@@ -43,7 +40,7 @@ export async function syncUser(userId: string): Promise<{ added: number; skipped
 
     // Get existing strava_ids to skip
     const { data: existing } = await supabase
-      .from("activities")
+      .from("activity_stats")
       .select("strava_id")
       .eq("user_id", userId);
 
@@ -58,7 +55,7 @@ export async function syncUser(userId: string): Promise<{ added: number; skipped
         continue;
       }
 
-      // PCT proximity check
+      // PCT proximity check using start_latlng
       if (act.start_latlng && act.start_latlng.length === 2) {
         if (!isNearPct(act.start_latlng[0], act.start_latlng[1])) {
           skipped++;
@@ -66,56 +63,7 @@ export async function syncUser(userId: string): Promise<{ added: number; skipped
         }
       }
 
-      let streams;
-      try {
-        streams = await fetchStreams(accessToken, act.id);
-      } catch {
-        continue;
-      }
-
-      const latlng = streams.latlng?.data;
-      if (!latlng || latlng.length < 2) continue;
-
-      const altitude = streams.altitude?.data;
-      const hasAlt = !!altitude && altitude.length === latlng.length;
-
-      // GeoJSON coords [lon, lat]
-      const coords: [number, number][] = latlng.map(([lat, lon]) => [lon, lat]);
-
-      let distM: number[] = [0];
-      let elevM: number[] = hasAlt ? [altitude![0]] : [];
-      let totalUp = 0;
-
-      if (hasAlt) {
-        let prevLat = latlng[0][0];
-        let prevLon = latlng[0][1];
-        let prevE = altitude![0];
-        let cum = 0;
-
-        for (let i = 1; i < latlng.length; i++) {
-          const [lat, lon] = latlng[i];
-          const d = haversineM(prevLat, prevLon, lat, lon);
-          cum += d;
-          distM.push(cum);
-
-          const e = altitude![i];
-          elevM.push(e);
-
-          if (e - prevE > 0) totalUp += e - prevE;
-
-          prevLat = lat;
-          prevLon = lon;
-          prevE = e;
-        }
-
-        [distM, elevM] = downsampleSeries(distM, elevM, PROFILE_MAX_POINTS);
-      } else {
-        distM = [];
-        elevM = [];
-        totalUp = act.total_elevation_gain || 0;
-      }
-
-      await supabase.from("activities").upsert(
+      await supabase.from("activity_stats").upsert(
         {
           user_id: userId,
           strava_id: act.id,
@@ -123,16 +71,31 @@ export async function syncUser(userId: string): Promise<{ added: number; skipped
           start_date: act.start_date,
           distance_m: act.distance || 0,
           moving_time_s: act.moving_time || 0,
+          elevation_gain_m: act.total_elevation_gain || 0,
           activity_type: act.type,
-          elevation_gain_m: totalUp,
-          profile_dist_m: distM,
-          profile_elev_m: elevM,
-          coordinates: coords,
         },
         { onConflict: "user_id,strava_id" }
       );
 
       added++;
+    }
+
+    // Update latest position from the most recent PCT activity with end_latlng
+    const withEnd = [...activities].reverse().find(
+      (a) => a.end_latlng && a.end_latlng.length === 2 &&
+        isNearPct(a.end_latlng[0], a.end_latlng[1])
+    );
+    if (withEnd && withEnd.end_latlng) {
+      await supabase.from("latest_position").upsert(
+        {
+          user_id: userId,
+          lat: withEnd.end_latlng[0],
+          lon: withEnd.end_latlng[1],
+          activity_date: withEnd.start_date,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id" }
+      );
     }
 
     await supabase

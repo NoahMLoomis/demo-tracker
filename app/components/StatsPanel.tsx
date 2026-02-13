@@ -1,6 +1,6 @@
 "use client";
 
-import type { GeoJSONFeatureCollection } from "@/lib/types";
+import type { TrailStats } from "@/lib/types";
 
 const MI_PER_M = 0.000621371;
 const KM_PER_M = 0.001;
@@ -27,44 +27,24 @@ function fmtDuration(sec: number) {
   return parts.join(" ");
 }
 
-function computeStats(track: GeoJSONFeatureCollection) {
-  const feats = track.features || [];
-  let distM = 0, timeS = 0, elevM = 0, elevCount = 0;
-
-  for (const f of feats) {
-    const p = f.properties;
-    if (Number.isFinite(p.distance_m)) distM += p.distance_m;
-    if (Number.isFinite(p.moving_time_s)) timeS += p.moving_time_s;
-    const e = p.elevation_gain_m;
-    if (Number.isFinite(e) && e >= 0) { elevM += e; elevCount++; }
-  }
-
-  const totalKm = distM * KM_PER_M;
-  const totalMi = distM * MI_PER_M;
-  const hours = timeS / 3600;
-
-  return {
-    featsCount: feats.length,
-    totalKm, totalMi,
-    elevM, elevCount,
-    timeS,
-    avgDistPerActKm: feats.length ? totalKm / feats.length : null,
-    avgDistPerActMi: feats.length ? totalMi / feats.length : null,
-    avgKmh: hours > 0 ? totalKm / hours : null,
-    avgMph: hours > 0 ? totalMi / hours : null,
-  };
-}
-
 interface StatsPanelProps {
-  track: GeoJSONFeatureCollection | null;
+  stats: TrailStats | null;
 }
 
-export default function StatsPanel({ track }: StatsPanelProps) {
-  if (!track) return null;
-  const s = computeStats(track);
+export default function StatsPanel({ stats }: StatsPanelProps) {
+  if (!stats) return null;
 
-  const elevMain = s.elevCount ? `${fmtInt(s.elevM)} m` : "\u2014";
-  const elevSub = s.elevCount ? `${fmtInt(s.elevM * FT_PER_M)} ft` : "";
+  const totalKm = stats.totalDistanceM * KM_PER_M;
+  const totalMi = stats.totalDistanceM * MI_PER_M;
+  const hours = stats.totalMovingTimeS / 3600;
+
+  const avgDistPerActKm = stats.activityCount ? totalKm / stats.activityCount : null;
+  const avgDistPerActMi = stats.activityCount ? totalMi / stats.activityCount : null;
+  const avgKmh = hours > 0 ? totalKm / hours : null;
+  const avgMph = hours > 0 ? totalMi / hours : null;
+
+  const elevMain = stats.totalElevationGainM > 0 ? `${fmtInt(stats.totalElevationGainM)} m` : "\u2014";
+  const elevSub = stats.totalElevationGainM > 0 ? `${fmtInt(stats.totalElevationGainM * FT_PER_M)} ft` : "";
 
   return (
     <div className="card">
@@ -73,8 +53,8 @@ export default function StatsPanel({ track }: StatsPanelProps) {
         <div className="pct-stat-hero">
           <div className="label">Total Distance</div>
           <div className="big">
-            <div className="primary">{fmtNumber(s.totalKm, 1)} km</div>
-            <div className="secondary">{fmtNumber(s.totalMi, 1)} mi</div>
+            <div className="primary">{fmtNumber(totalKm, 1)} km</div>
+            <div className="secondary">{fmtNumber(totalMi, 1)} mi</div>
           </div>
         </div>
 
@@ -87,20 +67,20 @@ export default function StatsPanel({ track }: StatsPanelProps) {
 
           <div className="pct-chip">
             <div className="label">Total Time</div>
-            <div className="value">{fmtDuration(s.timeS)}</div>
-            <div className="sub">{s.featsCount ? `${s.featsCount} activities` : ""}</div>
+            <div className="value">{fmtDuration(stats.totalMovingTimeS)}</div>
+            <div className="sub">{stats.activityCount ? `${stats.activityCount} activities` : ""}</div>
           </div>
 
           <div className="pct-chip">
             <div className="label">Avg Distance / Activity</div>
-            <div className="value">{s.avgDistPerActKm != null ? `${fmtNumber(s.avgDistPerActKm, 1)} km` : "\u2014"}</div>
-            <div className="sub">{s.avgDistPerActMi != null ? `${fmtNumber(s.avgDistPerActMi, 1)} mi` : ""}</div>
+            <div className="value">{avgDistPerActKm != null ? `${fmtNumber(avgDistPerActKm, 1)} km` : "\u2014"}</div>
+            <div className="sub">{avgDistPerActMi != null ? `${fmtNumber(avgDistPerActMi, 1)} mi` : ""}</div>
           </div>
 
           <div className="pct-chip">
             <div className="label">Avg Speed</div>
-            <div className="value">{s.avgKmh != null ? `${fmtNumber(s.avgKmh, 1)} km/h` : "\u2014"}</div>
-            <div className="sub">{s.avgMph != null ? `${fmtNumber(s.avgMph, 1)} mi/h` : ""}</div>
+            <div className="value">{avgKmh != null ? `${fmtNumber(avgKmh, 1)} km/h` : "\u2014"}</div>
+            <div className="sub">{avgMph != null ? `${fmtNumber(avgMph, 1)} mi/h` : ""}</div>
           </div>
         </div>
       </div>

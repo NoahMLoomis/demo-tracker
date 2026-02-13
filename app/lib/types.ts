@@ -13,22 +13,6 @@ export interface User {
   updated_at: string;
 }
 
-export interface Activity {
-  id: string;
-  user_id: string;
-  strava_id: number;
-  name: string | null;
-  start_date: string;
-  distance_m: number;
-  moving_time_s: number;
-  activity_type: string | null;
-  elevation_gain_m: number;
-  profile_dist_m: number[] | null;
-  profile_elev_m: number[] | null;
-  coordinates: [number, number][];
-  created_at: string;
-}
-
 export interface SyncState {
   user_id: string;
   last_sync_at: string | null;
@@ -41,29 +25,19 @@ export interface LatestPosition {
   ts: string;
 }
 
-export interface GeoJSONFeature {
-  type: "Feature";
-  properties: {
-    i: number;
-    strava_id: number;
-    name: string;
+export interface TrailStats {
+  totalDistanceM: number;
+  totalMovingTimeS: number;
+  totalElevationGainM: number;
+  activityCount: number;
+  firstDate: string | null;
+  lastDate: string | null;
+  activities: {
     start_date: string;
     distance_m: number;
     moving_time_s: number;
-    type: string;
     elevation_gain_m: number;
-    profile_dist_m: number[];
-    profile_elev_m: number[];
-  };
-  geometry: {
-    type: "LineString";
-    coordinates: [number, number][];
-  };
-}
-
-export interface GeoJSONFeatureCollection {
-  type: "FeatureCollection";
-  features: GeoJSONFeature[];
+  }[];
 }
 
 export interface SessionPayload {

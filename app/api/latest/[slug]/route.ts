@@ -18,25 +18,21 @@ export async function GET(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  const { data: latest } = await supabase
-    .from("activities")
-    .select("start_date, coordinates")
+  const { data: pos } = await supabase
+    .from("latest_position")
+    .select("lat, lon, activity_date")
     .eq("user_id", user.id)
-    .order("start_date", { ascending: false })
-    .limit(1)
     .single();
 
-  if (!latest || !latest.coordinates?.length) {
+  if (!pos) {
     return NextResponse.json({ lat: 0, lon: 0, ts: "" });
   }
 
-  const lastCoord = latest.coordinates[latest.coordinates.length - 1];
-
   return NextResponse.json(
     {
-      lat: lastCoord[1],
-      lon: lastCoord[0],
-      ts: latest.start_date,
+      lat: pos.lat,
+      lon: pos.lon,
+      ts: pos.activity_date || "",
     },
     {
       headers: {

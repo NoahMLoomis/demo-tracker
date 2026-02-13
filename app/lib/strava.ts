@@ -61,6 +61,7 @@ export interface StravaActivity {
   type: string;
   total_elevation_gain: number;
   start_latlng: [number, number] | null;
+  end_latlng: [number, number] | null;
 }
 
 export async function fetchActivities(
@@ -83,18 +84,4 @@ export async function fetchActivities(
     all.push(...batch);
   }
   return all;
-}
-
-export interface StravaStreams {
-  latlng?: { data: [number, number][] };
-  altitude?: { data: number[] };
-}
-
-export async function fetchStreams(accessToken: string, activityId: number): Promise<StravaStreams> {
-  const res = await fetch(
-    `${API_BASE}/activities/${activityId}/streams?keys=latlng,time,altitude&key_by_type=true`,
-    { headers: { Authorization: `Bearer ${accessToken}` } }
-  );
-  if (!res.ok) throw new Error(`Strava streams fetch failed: ${res.status}`);
-  return res.json();
 }

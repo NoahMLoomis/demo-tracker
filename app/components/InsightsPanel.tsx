@@ -1,6 +1,6 @@
 "use client";
 
-import type { GeoJSONFeatureCollection } from "@/lib/types";
+import type { TrailStats } from "@/lib/types";
 
 const MI_PER_M = 0.000621371;
 const KM_PER_M = 0.001;
@@ -35,22 +35,21 @@ function fmtDateShort(ts: string) {
 
 interface DayItem { distM: number; timeS: number | null; dateLabel: string }
 
-function computeInsights(track: GeoJSONFeatureCollection) {
-  const feats = track.features || [];
-  let distM = 0, timeS = 0;
+function computeInsights(stats: TrailStats) {
+  const totalKm = stats.totalDistanceM * KM_PER_M;
+  const totalMi = stats.totalDistanceM * MI_PER_M;
+  const pctCompleted = (totalMi / PCT_TOTAL_MI) * 100;
+  const remainingMi = Math.max(0, PCT_TOTAL_MI - totalMi);
+  const remainingKm = remainingMi * 1.609344;
+
   const days = new Set<string>();
-  let firstTs: number | null = null, lastTs: number | null = null;
-  let longest: DayItem | null = null, shortest: DayItem | null = null;
+  let firstTs: number | null = null;
+  let lastTs: number | null = null;
+  let longest: DayItem | null = null;
+  let shortest: DayItem | null = null;
 
-  for (const f of feats) {
-    const p = f.properties;
-    const d = p.distance_m;
-    const t = p.moving_time_s;
-    const sd = p.start_date || "";
-
-    if (Number.isFinite(d)) distM += d;
-    if (Number.isFinite(t)) timeS += t;
-
+  for (const a of stats.activities) {
+    const sd = a.start_date || "";
     if (sd) {
       days.add(sd.slice(0, 10));
       const ts = Date.parse(sd);
@@ -60,8 +59,13 @@ function computeInsights(track: GeoJSONFeatureCollection) {
       }
     }
 
+    const d = a.distance_m;
     if (Number.isFinite(d) && d > 0) {
-      const item: DayItem = { distM: d, timeS: Number.isFinite(t) ? t : null, dateLabel: sd ? fmtDateShort(sd) : "\u2014" };
+      const item: DayItem = {
+        distM: d,
+        timeS: Number.isFinite(a.moving_time_s) ? a.moving_time_s : null,
+        dateLabel: sd ? fmtDateShort(sd) : "\u2014",
+      };
       if (!longest || d > longest.distM) longest = item;
       if (!shortest || d < shortest.distM) shortest = item;
     }
@@ -74,13 +78,7 @@ function computeInsights(track: GeoJSONFeatureCollection) {
     restDays = Math.max(0, span - activeDays);
   }
 
-  const totalKm = distM * KM_PER_M;
-  const totalMi = distM * MI_PER_M;
-  const pctCompleted = (totalMi / PCT_TOTAL_MI) * 100;
-  const remainingMi = Math.max(0, PCT_TOTAL_MI - totalMi);
-  const remainingKm = remainingMi * 1.609344;
-
-  return { totalKm, totalMi, pctCompleted, remainingKm, remainingMi, firstTs, lastTs, activeDays, restDays, longest, shortest, timeS };
+  return { totalKm, totalMi, pctCompleted, remainingKm, remainingMi, firstTs, lastTs, activeDays, restDays, longest, shortest };
 }
 
 function DayChip({ label, item }: { label: string; item: DayItem | null }) {
@@ -105,12 +103,12 @@ function DayChip({ label, item }: { label: string; item: DayItem | null }) {
 }
 
 interface InsightsPanelProps {
-  track: GeoJSONFeatureCollection | null;
+  stats: TrailStats | null;
 }
 
-export default function InsightsPanel({ track }: InsightsPanelProps) {
-  if (!track) return null;
-  const s = computeInsights(track);
+export default function InsightsPanel({ stats }: InsightsPanelProps) {
+  if (!stats) return null;
+  const s = computeInsights(stats);
 
   const pctTxt = Number.isFinite(s.pctCompleted) ? `${fmtNumber(s.pctCompleted, 1)}%` : "\u2014%";
   const pctWidth = Math.max(0, Math.min(100, Number.isFinite(s.pctCompleted) ? s.pctCompleted : 0));
