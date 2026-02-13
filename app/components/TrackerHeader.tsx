@@ -37,7 +37,7 @@ export default function TrackerHeader({ slug, displayName, lighterpackUrl }: Tra
             </Link>
           ))}
           {lighterpackUrl && (
-            <a href={lighterpackUrl} target="_blank" rel="noopener noreferrer" className="tab">
+            <a href={`https://lighterpack.com/r/${lighterpackUrl}`} target="_blank" rel="noopener noreferrer" className="tab">
               Gear
             </a>
           )}

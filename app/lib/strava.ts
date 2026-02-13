@@ -63,11 +63,18 @@ export interface StravaActivity {
   start_latlng: [number, number] | null;
 }
 
-export async function fetchActivities(accessToken: string): Promise<StravaActivity[]> {
+export async function fetchActivities(
+  accessToken: string,
+  after?: number,
+  before?: number
+): Promise<StravaActivity[]> {
   const all: StravaActivity[] = [];
   for (let page = 1; page <= 5; page++) {
+    const params = new URLSearchParams({ per_page: "50", page: String(page) });
+    if (after != null) params.set("after", String(after));
+    if (before != null) params.set("before", String(before));
     const res = await fetch(
-      `${API_BASE}/athlete/activities?per_page=50&page=${page}`,
+      `${API_BASE}/athlete/activities?${params.toString()}`,
       { headers: { Authorization: `Bearer ${accessToken}` } }
     );
     if (!res.ok) throw new Error(`Strava activities fetch failed: ${res.status}`);

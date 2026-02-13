@@ -1,3 +1,0 @@
-move supabase, lib and components to app folder
-
-put env variables in BW

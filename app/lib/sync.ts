@@ -14,8 +14,31 @@ export async function syncUser(userId: string): Promise<{ added: number; skipped
     .upsert({ user_id: userId, status: "syncing", last_sync_at: new Date().toISOString() });
 
   try {
+    // Get user's date range for fetching activities
+    const { data: user } = await supabase
+      .from("users")
+      .select("hike_start_date, hike_end_date")
+      .eq("id", userId)
+      .single();
+
+    let after: number | undefined;
+    let before: number | undefined;
+
+    if (user?.hike_start_date) {
+      const start = new Date(user.hike_start_date);
+      after = Math.floor(start.getTime() / 1000);
+
+      if (user.hike_end_date) {
+        before = Math.floor(new Date(user.hike_end_date).getTime() / 1000);
+      } else {
+        const end = new Date(start);
+        end.setMonth(end.getMonth() + 6);
+        before = Math.floor(end.getTime() / 1000);
+      }
+    }
+
     const accessToken = await refreshAccessToken(userId);
-    const activities = await fetchActivities(accessToken);
+    const activities = await fetchActivities(accessToken, after, before);
     activities.sort((a, b) => a.start_date.localeCompare(b.start_date));
 
     // Get existing strava_ids to skip

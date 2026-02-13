@@ -4,8 +4,8 @@ create table users (
   strava_athlete_id bigint unique not null,
   display_name text not null,
   slug text unique not null,
-  profile_image_url text,
-
+  hike_start_date date not null,
+  hike_end_date date,
   lighterpack_url text,
   strava_access_token text not null,
   strava_refresh_token text not null,

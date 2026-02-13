@@ -1,12 +1,9 @@
 "use client";
 
-import { useRef, useEffect, useCallback } from "react";
+import { useRef, useEffect } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { GeoJSONFeatureCollection } from "@/lib/types";
-
-const LIVE_DRAW_MS = 7500;
-const LIVE_PAUSE_MS = 3500;
 
 const COLOR_EXPR: maplibregl.ExpressionSpecification = [
   "case",
@@ -51,93 +48,35 @@ function createBlinkMarkerEl(): HTMLDivElement {
   ring.style.animation = "pctPulse 1.6s ease-out infinite";
   el.appendChild(ring);
 
-  let on = false;
-  setInterval(() => {
-    on = !on;
-    el.style.background = on ? "#ff7a18" : "#2bff88";
-    ring.style.borderColor = on ? "rgba(255,122,24,.55)" : "rgba(43,255,136,.55)";
-    ring.style.boxShadow = on
-      ? "0 0 22px rgba(255,122,24,.40)"
-      : "0 0 22px rgba(43,255,136,.40)";
-  }, 700);
-
   return el;
+}
+
+function findLastCoord(track: GeoJSONFeatureCollection): [number, number] | null {
+  let bestFeat = null;
+  let bestTs = -Infinity;
+  for (const f of track.features) {
+    const ts = f.properties?.start_date ? Date.parse(f.properties.start_date) : NaN;
+    if (Number.isFinite(ts) && ts > bestTs) {
+      bestTs = ts;
+      bestFeat = f;
+    }
+  }
+  if (!bestFeat?.geometry?.coordinates?.length) return null;
+  const coords = bestFeat.geometry.coordinates;
+  return coords[coords.length - 1];
 }
 
 interface MapProps {
   geojsonUrl: string;
-  latestUrl: string;
   onTrackLoaded?: (track: GeoJSONFeatureCollection) => void;
 }
 
-export default function MapView({ geojsonUrl, latestUrl, onTrackLoaded }: MapProps) {
+export default function MapView({ geojsonUrl, onTrackLoaded }: MapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markerRef = useRef<maplibregl.Marker | null>(null);
   const popupRef = useRef<maplibregl.Popup | null>(null);
   const didFitRef = useRef(false);
-  const liveAnimRef = useRef<{
-    raf: number | null;
-    timer: ReturnType<typeof setTimeout> | null;
-  }>({ raf: null, timer: null });
-
-  const stopLiveAnim = useCallback(() => {
-    const la = liveAnimRef.current;
-    if (la.raf) cancelAnimationFrame(la.raf);
-    if (la.timer) clearTimeout(la.timer);
-    la.raf = null;
-    la.timer = null;
-  }, []);
-
-  const clearLiveLine = useCallback(() => {
-    const map = mapRef.current;
-    if (!map) return;
-    const src = map.getSource("latest-progress") as maplibregl.GeoJSONSource | undefined;
-    if (src) {
-      src.setData({
-        type: "Feature",
-        properties: {},
-        geometry: { type: "LineString", coordinates: [] },
-      });
-    }
-  }, []);
-
-  const startLiveAnim = useCallback(
-    (coords: [number, number][]) => {
-      stopLiveAnim();
-      if (!coords || coords.length < 2) return;
-      const map = mapRef.current;
-      if (!map) return;
-
-      const runOnce = () => {
-        const t0 = performance.now();
-        const step = (now: number) => {
-          const src = map.getSource("latest-progress") as maplibregl.GeoJSONSource | undefined;
-          if (!src) return;
-          const elapsed = now - t0;
-          const p = Math.min(1, elapsed / LIVE_DRAW_MS);
-          const n = Math.max(2, Math.floor(p * coords.length));
-          src.setData({
-            type: "Feature",
-            properties: {},
-            geometry: { type: "LineString", coordinates: coords.slice(0, n) },
-          });
-          if (p < 1) {
-            liveAnimRef.current.raf = requestAnimationFrame(step);
-          } else {
-            liveAnimRef.current.raf = null;
-            liveAnimRef.current.timer = setTimeout(() => {
-              clearLiveLine();
-              runOnce();
-            }, LIVE_PAUSE_MS);
-          }
-        };
-        liveAnimRef.current.raf = requestAnimationFrame(step);
-      };
-      runOnce();
-    },
-    [stopLiveAnim, clearLiveLine]
-  );
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -175,8 +114,8 @@ export default function MapView({ geojsonUrl, latestUrl, onTrackLoaded }: MapPro
     const map = new maplibregl.Map({
       container: containerRef.current,
       style,
-      center: [-120, 40],
-      zoom: 5,
+      center: [-119.5, 37.5],
+      zoom: 4,
     });
 
     mapRef.current = map;
@@ -277,10 +216,7 @@ export default function MapView({ geojsonUrl, latestUrl, onTrackLoaded }: MapPro
 
     const refresh = async () => {
       try {
-        const [track, latest] = await Promise.all([
-          fetch(geojsonUrl, { cache: "no-store" }).then((r) => r.json()),
-          fetch(latestUrl, { cache: "no-store" }).then((r) => r.json()),
-        ]);
+        const track = await fetch(geojsonUrl, { cache: "no-store" }).then((r) => r.json());
 
         onTrackLoaded?.(track);
 
@@ -314,23 +250,6 @@ export default function MapView({ geojsonUrl, latestUrl, onTrackLoaded }: MapPro
             filter: ["==", ["get", "strava_id"], -1],
           });
 
-          map.addSource("latest-progress", {
-            type: "geojson",
-            data: { type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: [] } },
-          });
-          map.addLayer({
-            id: "latest-progress-glow",
-            type: "line",
-            source: "latest-progress",
-            paint: { "line-color": "rgba(255,255,255,0.40)", "line-width": 18, "line-opacity": 0.22, "line-blur": 10 },
-          });
-          map.addLayer({
-            id: "latest-progress-line",
-            type: "line",
-            source: "latest-progress",
-            paint: { "line-color": "rgba(255,255,255,0.95)", "line-width": 3, "line-opacity": 0.85 },
-          });
-
           map.on("mousemove", "track-main", (e) => {
             map.getCanvas().style.cursor = "pointer";
             const f = e.features?.[0];
@@ -355,14 +274,17 @@ export default function MapView({ geojsonUrl, latestUrl, onTrackLoaded }: MapPro
           (map.getSource("track") as maplibregl.GeoJSONSource).setData(track);
         }
 
-        // Marker
-        const lngLat: [number, number] = [latest.lon, latest.lat];
-        if (!markerRef.current) {
-          markerRef.current = new maplibregl.Marker({ element: createBlinkMarkerEl() })
-            .setLngLat(lngLat)
-            .addTo(map);
-        } else {
-          markerRef.current.setLngLat(lngLat);
+        // Place marker at the last coordinate of the most recent activity
+        const lastCoord = findLastCoord(track);
+        if (lastCoord) {
+          const lngLat: [number, number] = [lastCoord[0], lastCoord[1]];
+          if (!markerRef.current) {
+            markerRef.current = new maplibregl.Marker({ element: createBlinkMarkerEl() })
+              .setLngLat(lngLat)
+              .addTo(map);
+          } else {
+            markerRef.current.setLngLat(lngLat);
+          }
         }
 
         // Fit bounds on first load
@@ -373,33 +295,11 @@ export default function MapView({ geojsonUrl, latestUrl, onTrackLoaded }: MapPro
               [[bbox[0], bbox[1]], [bbox[2], bbox[3]]],
               { padding: 40, duration: 800 }
             );
-          } else {
-            map.easeTo({ center: lngLat, zoom: 13, duration: 800 });
           }
           didFitRef.current = true;
         }
-
-        // Latest activity animation
-        const feats = track.features || [];
-        let bestFeat = null;
-        let bestTs = -Infinity;
-        for (const f of feats) {
-          const ts = f.properties?.start_date ? Date.parse(f.properties.start_date) : NaN;
-          if (Number.isFinite(ts) && ts > bestTs) {
-            bestTs = ts;
-            bestFeat = f;
-          }
-        }
-
-        if (bestFeat?.geometry?.type === "LineString") {
-          startLiveAnim(bestFeat.geometry.coordinates);
-        } else {
-          clearLiveLine();
-          stopLiveAnim();
-        }
       } catch {
-        stopLiveAnim();
-        clearLiveLine();
+        // silently ignore fetch errors
       }
     };
 
@@ -410,11 +310,10 @@ export default function MapView({ geojsonUrl, latestUrl, onTrackLoaded }: MapPro
     });
 
     return () => {
-      stopLiveAnim();
       map.remove();
       mapRef.current = null;
     };
-  }, [geojsonUrl, latestUrl, onTrackLoaded, startLiveAnim, stopLiveAnim, clearLiveLine]);
+  }, [geojsonUrl, onTrackLoaded]);
 
   return <div ref={containerRef} className="map" />;
 }

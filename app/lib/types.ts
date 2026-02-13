@@ -3,8 +3,8 @@ export interface User {
   strava_athlete_id: number;
   display_name: string;
   slug: string;
-  profile_image_url: string | null;
-
+  hike_start_date: string;
+  hike_end_date: string | null;
   lighterpack_url: string | null;
   strava_access_token: string;
   strava_refresh_token: string;

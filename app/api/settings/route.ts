@@ -13,24 +13,18 @@ export async function POST(request: NextRequest) {
 
   const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
 
-  if (typeof body.slug === "string" && body.slug.trim()) {
-    const slug = body.slug.trim().toLowerCase().replace(/[^a-z0-9-]/g, "");
-    // Check uniqueness
-    const { data: conflict } = await supabase
-      .from("users")
-      .select("id")
-      .eq("slug", slug)
-      .neq("id", session.userId)
-      .single();
-
-    if (conflict) {
-      return NextResponse.json({ error: "Slug already taken" }, { status: 409 });
-    }
-    updates.slug = slug;
+  // Hike start date is required
+  if (typeof body.hike_start_date !== "string" || !body.hike_start_date.trim()) {
+    return NextResponse.json({ error: "Hike start date is required" }, { status: 400 });
   }
+  updates.hike_start_date = body.hike_start_date;
 
-  if (body.lighterpack_url !== undefined) updates.lighterpack_url = body.lighterpack_url;
-
+  if (body.hike_end_date !== undefined){
+   updates.hike_end_date = body.hike_end_date;
+  }
+  if (body.lighterpack_url !== undefined) {
+    updates.lighterpack_url = body.lighterpack_url;
+  }
   await supabase.from("users").update(updates).eq("id", session.userId);
 
   return NextResponse.json({ ok: true });

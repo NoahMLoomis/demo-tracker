@@ -57,7 +57,6 @@ export async function GET(request: NextRequest) {
         strava_refresh_token: tok.refresh_token,
         strava_token_expires_at: new Date(tok.expires_at * 1000).toISOString(),
         display_name: displayName,
-        profile_image_url: athlete.profile || null,
         updated_at: new Date().toISOString(),
       })
       .eq("id", existingUser.id);
@@ -85,7 +84,7 @@ export async function GET(request: NextRequest) {
         strava_athlete_id: athlete.id,
         display_name: displayName,
         slug,
-        profile_image_url: athlete.profile || null,
+        hike_start_date: new Date().toISOString().slice(0, 10),
         strava_access_token: tok.access_token,
         strava_refresh_token: tok.refresh_token,
         strava_token_expires_at: new Date(tok.expires_at * 1000).toISOString(),

@@ -21,7 +21,6 @@ export default function TrackerPage() {
     <>
       <MapView
         geojsonUrl={`/api/tracks/${slug}`}
-        latestUrl={`/api/latest/${slug}`}
         onTrackLoaded={onTrackLoaded}
       />
       <div className="grid">

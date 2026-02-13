@@ -4,7 +4,8 @@ insert into users (
   strava_athlete_id,
   display_name,
   slug,
-  profile_image_url,
+
+  hike_start_date,
   lighterpack_url,
   strava_access_token,
   strava_refresh_token,
@@ -17,7 +18,8 @@ insert into users (
   90000001,
   'Alex "Switchback" Moreno',
   'switchback',
-  'https://example.com/images/switchback.jpg',
+
+  '2025-04-10',
   'https://lighterpack.com/r/switchback-pct',
   'strava_access_token_1',
   'strava_refresh_token_1',
@@ -30,7 +32,8 @@ insert into users (
   90000002,
   'Jamie "Granite" Lee',
   'granite',
-  'https://example.com/images/granite.jpg',
+
+  '2025-06-01',
   'https://lighterpack.com/r/granite-pct',
   'strava_access_token_2',
   'strava_refresh_token_2',
@@ -43,7 +46,8 @@ insert into users (
   90000003,
   'Taylor "Snowline" Brooks',
   'snowline',
-  'https://example.com/images/snowline.jpg',
+
+  '2025-08-15',
   'https://lighterpack.com/r/snowline-pct',
   'strava_access_token_3',
   'strava_refresh_token_3',
