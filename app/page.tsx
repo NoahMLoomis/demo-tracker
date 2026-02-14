@@ -10,7 +10,7 @@ export default function LandingPage() {
             <div className="brand-sub">Pacific Crest Trail</div>
           </div>
           <nav className="tabs">
-            <Link href="/login" className="tab">Sign In</Link>
+            <Link href="/login" className="tab">Login</Link>
           </nav>
         </div>
       </header>

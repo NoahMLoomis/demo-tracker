@@ -3,6 +3,7 @@
 import { useRef, useEffect } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+import type { TrailUpdate } from "@/lib/types";
 
 function createBlinkMarkerEl(): HTMLDivElement {
   const el = document.createElement("div");
@@ -29,14 +30,28 @@ function createBlinkMarkerEl(): HTMLDivElement {
   return el;
 }
 
-interface MapProps {
-  slug: string;
+function createUpdateMarkerEl(): HTMLDivElement {
+  const el = document.createElement("div");
+  el.style.width = "12px";
+  el.style.height = "12px";
+  el.style.borderRadius = "999px";
+  el.style.border = "2px solid rgba(232,238,245,.85)";
+  el.style.background = "#f0883e";
+  el.style.cursor = "pointer";
+  el.style.boxShadow = "0 2px 8px rgba(0,0,0,.4)";
+  return el;
 }
 
-export default function MapView({ slug }: MapProps) {
+interface MapProps {
+  slug: string;
+  updates?: TrailUpdate[];
+}
+
+export default function MapView({ slug, updates }: MapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markerRef = useRef<maplibregl.Marker | null>(null);
+  const updateMarkersRef = useRef<maplibregl.Marker[]>([]);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -74,7 +89,7 @@ export default function MapView({ slug }: MapProps) {
     const map = new maplibregl.Map({
       container: containerRef.current,
       style,
-      center: [-119.5, 37.5],
+      center: [-117.5, 41],
       zoom: 4,
     });
 
@@ -188,6 +203,37 @@ export default function MapView({ slug }: MapProps) {
       mapRef.current = null;
     };
   }, [slug]);
+
+  // Sync update markers when updates prop changes
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !updates) return;
+
+    // Clear existing update markers
+    for (const m of updateMarkersRef.current) m.remove();
+    updateMarkersRef.current = [];
+
+    for (const u of updates) {
+      if (u.lat == null || u.lon == null) continue;
+
+      const snippet = u.body.length > 100 ? u.body.slice(0, 100) + "..." : u.body;
+      const popup = new maplibregl.Popup({ closeButton: true, closeOnClick: true, maxWidth: "280px" })
+        .setHTML(
+          `<div class="pct-popup">
+            <div class="pct-popup-title">${u.title}</div>
+            <div style="margin-top:6px;font-size:13px;color:rgba(255,255,255,.7)">${snippet}</div>
+            <a href="/tracker/${slug}/updates#${u.id}" style="display:inline-block;margin-top:8px;font-size:13px;color:#7ee787">Read more</a>
+          </div>`
+        );
+
+      const marker = new maplibregl.Marker({ element: createUpdateMarkerEl() })
+        .setLngLat([u.lon, u.lat])
+        .setPopup(popup)
+        .addTo(map);
+
+      updateMarkersRef.current.push(marker);
+    }
+  }, [updates, slug]);
 
   return <div ref={containerRef} className="map" />;
 }

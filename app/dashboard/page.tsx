@@ -27,10 +27,16 @@ export default async function DashboardPage() {
     .eq("user_id", session.userId)
     .single();
 
+  const { data: updates } = await supabase
+    .from("trail_updates")
+    .select("id, user_id, title, body, lat, lon, created_at")
+    .eq("user_id", session.userId)
+    .order("created_at", { ascending: false });
+
   return (
     <main className="wrap" style={{ paddingTop: 32 }}>
       <h1 style={{ fontSize: 24, fontWeight: 900, marginBottom: 20 }}>Dashboard</h1>
-      <DashboardClient user={user} syncState={syncState} />
+      <DashboardClient user={user} syncState={syncState} initialUpdates={updates || []} />
     </main>
   );
 }

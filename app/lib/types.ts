@@ -40,6 +40,16 @@ export interface TrailStats {
   }[];
 }
 
+export interface TrailUpdate {
+  id: string;
+  user_id: string;
+  title: string;
+  body: string;
+  lat: number | null;
+  lon: number | null;
+  created_at: string;
+}
+
 export interface SessionPayload {
   userId: string;
   exp: number;
