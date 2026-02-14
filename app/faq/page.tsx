@@ -148,7 +148,6 @@ export default function FAQPage() {
 				<div className="wrap header-inner">
 					<div className="brand">
 						<div className="brand-title">PCT Tracker</div>
-						<div className="brand-sub">Pacific Crest Trail</div>
 					</div>
 					<nav className="tabs">
 						<Link href="/" className="tab">

@@ -1,7 +1,10 @@
 ## TODO 
-- Add FAQ 
-    - How to automatically upload garmin / coros activites to strava
 - is sync state still used?
+- Add a bug report button -> Github issue "Bug: xxx"
+- Add a feautre request button -> Github "Feature: xxx"
+- Add favicon
+- make fake strava data for Jane doe so stats are correct
+- Would it be possible, instead of getting the activity stats, to use only the last position, then calculate the stats from that using the NOBO or SOBO to determine starting point?
 ## Possible blockers:
 
 - Vercel / Supabase limiting - could pass by the free tier

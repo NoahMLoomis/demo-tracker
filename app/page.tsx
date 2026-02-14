@@ -16,7 +16,6 @@ export default function LandingPage() {
 				>
 					<div className="brand">
 						<div className="brand-title">PCT Tracker</div>
-						<div className="brand-sub">Pacific Crest Trail</div>
 					</div>
 					<nav className="tabs">
 						<Link href="/faq" className="tab">

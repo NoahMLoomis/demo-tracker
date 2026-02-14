@@ -27,7 +27,6 @@ export default function TrackerHeader({
 			<div className="wrap header-inner">
 				<div className="brand">
 					<div className="brand-title">{displayName}&apos;s PCT Tracker</div>
-					<div className="brand-sub">Pacific Crest Trail</div>
 				</div>
 
 				<nav className="tabs">
