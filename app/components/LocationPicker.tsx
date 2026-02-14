@@ -5,145 +5,153 @@ import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 interface LocationPickerProps {
-  lat?: number | null;
-  lon?: number | null;
-  onChange: (lat: number, lon: number) => void;
+	lat?: number | null;
+	lon?: number | null;
+	onChange: (lat: number, lon: number) => void;
 }
 
-export default function LocationPicker({ lat, lon, onChange }: LocationPickerProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<maplibregl.Map | null>(null);
-  const markerRef = useRef<maplibregl.Marker | null>(null);
-  const [geoStatus, setGeoStatus] = useState<"prompting" | "denied" | "found" | null>(null);
+export default function LocationPicker({
+	lat,
+	lon,
+	onChange,
+}: LocationPickerProps) {
+	const containerRef = useRef<HTMLDivElement>(null);
+	const mapRef = useRef<maplibregl.Map | null>(null);
+	const markerRef = useRef<maplibregl.Marker | null>(null);
+	const [geoStatus, setGeoStatus] = useState<
+		"prompting" | "denied" | "found" | null
+	>(null);
 
-  const placeMarker = (map: maplibregl.Map, lng: number, lat: number) => {
-    if (!markerRef.current) {
-      markerRef.current = new maplibregl.Marker({ color: "#7ee787" })
-        .setLngLat([lng, lat])
-        .addTo(map);
-    } else {
-      markerRef.current.setLngLat([lng, lat]);
-    }
-  };
+	const placeMarker = (map: maplibregl.Map, lng: number, lat: number) => {
+		if (!markerRef.current) {
+			markerRef.current = new maplibregl.Marker({ color: "#7ee787" })
+				.setLngLat([lng, lat])
+				.addTo(map);
+		} else {
+			markerRef.current.setLngLat([lng, lat]);
+		}
+	};
 
-  useEffect(() => {
-    if (!containerRef.current) return;
+	useEffect(() => {
+		if (!containerRef.current) return;
 
-    const map = new maplibregl.Map({
-      container: containerRef.current,
-      style: {
-        version: 8,
-        sources: {
-          sat: {
-            type: "raster",
-            tiles: [
-              "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-            ],
-            tileSize: 256,
-          },
-        },
-        layers: [
-          { id: "sat-layer", type: "raster", source: "sat" },
-        ],
-      },
-      center: [lon ?? -119.5, lat ?? 37.5],
-      zoom: lat != null ? 8 : 4,
-    });
+		const map = new maplibregl.Map({
+			container: containerRef.current,
+			style: {
+				version: 8,
+				sources: {
+					sat: {
+						type: "raster",
+						tiles: [
+							"https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+						],
+						tileSize: 256,
+					},
+				},
+				layers: [{ id: "sat-layer", type: "raster", source: "sat" }],
+			},
+			center: [lon ?? -119.5, lat ?? 37.5],
+			zoom: lat != null ? 8 : 4,
+		});
 
-    mapRef.current = map;
+		mapRef.current = map;
 
-    map.addControl(new maplibregl.NavigationControl(), "top-right");
+		map.addControl(new maplibregl.NavigationControl(), "top-right");
 
-    map.on("load", () => {
-      // Add PCT trail
-      map.addSource("pct-trail", {
-        type: "geojson",
-        data: "/pct-trail.geojson",
-      });
+		map.on("load", () => {
+			// Add PCT trail
+			map.addSource("pct-trail", {
+				type: "geojson",
+				data: "/pct-trail.geojson",
+			});
 
-      map.addLayer({
-        id: "pct-glow",
-        type: "line",
-        source: "pct-trail",
-        paint: {
-          "line-color": "#7ee787",
-          "line-width": 10,
-          "line-opacity": 0.2,
-          "line-blur": 5,
-        },
-      });
+			map.addLayer({
+				id: "pct-glow",
+				type: "line",
+				source: "pct-trail",
+				paint: {
+					"line-color": "#7ee787",
+					"line-width": 10,
+					"line-opacity": 0.2,
+					"line-blur": 5,
+				},
+			});
 
-      map.addLayer({
-        id: "pct-main",
-        type: "line",
-        source: "pct-trail",
-        paint: {
-          "line-color": "#7ee787",
-          "line-width": 2.5,
-          "line-opacity": 0.75,
-        },
-      });
-    });
+			map.addLayer({
+				id: "pct-main",
+				type: "line",
+				source: "pct-trail",
+				paint: {
+					"line-color": "#7ee787",
+					"line-width": 2.5,
+					"line-opacity": 0.75,
+				},
+			});
+		});
 
-    // Place initial marker if editing
-    if (lat != null && lon != null) {
-      placeMarker(map, lon, lat);
-    } else {
-      // Try to get user's location via browser API
-      if ("geolocation" in navigator) {
-        setGeoStatus("prompting");
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            setGeoStatus("found");
-            const { latitude, longitude } = pos.coords;
-            placeMarker(map, longitude, latitude);
-            map.flyTo({ center: [longitude, latitude], zoom: 10 });
-            onChange(latitude, longitude);
-          },
-          () => {
-            setGeoStatus("denied");
-          },
-          { enableHighAccuracy: true, timeout: 10000 }
-        );
-      }
-    }
+		// Place initial marker if editing
+		if (lat != null && lon != null) {
+			placeMarker(map, lon, lat);
+		} else {
+			// Try to get user's location via browser API
+			if ("geolocation" in navigator) {
+				setGeoStatus("prompting");
+				navigator.geolocation.getCurrentPosition(
+					(pos) => {
+						setGeoStatus("found");
+						const { latitude, longitude } = pos.coords;
+						placeMarker(map, longitude, latitude);
+						map.flyTo({ center: [longitude, latitude], zoom: 10 });
+						onChange(latitude, longitude);
+					},
+					() => {
+						setGeoStatus("denied");
+					},
+					{ enableHighAccuracy: true, timeout: 10000 },
+				);
+			}
+		}
 
-    map.on("click", (e) => {
-      const { lng, lat: clickLat } = e.lngLat;
-      placeMarker(map, lng, clickLat);
-      onChange(clickLat, lng);
-      setGeoStatus(null);
-    });
+		map.on("click", (e) => {
+			const { lng, lat: clickLat } = e.lngLat;
+			placeMarker(map, lng, clickLat);
+			onChange(clickLat, lng);
+			setGeoStatus(null);
+		});
 
-    return () => {
-      map.remove();
-      mapRef.current = null;
-    };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+		return () => {
+			map.remove();
+			mapRef.current = null;
+		};
+	}, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  return (
-    <div>
-      {geoStatus === "prompting" && (
-        <p className="muted small" style={{ marginTop: 6, marginBottom: 6, color: "var(--accent)" }}>
-          Accept the location permission to auto-detect your position, or click the map to place a pin manually.
-        </p>
-      )}
-      {geoStatus === "denied" && (
-        <p className="muted small" style={{ marginTop: 6, marginBottom: 6 }}>
-          Location access denied. Click the map to place a pin manually.
-        </p>
-      )}
-      <div
-        ref={containerRef}
-        style={{
-          width: "100%",
-          height: 250,
-          borderRadius: 10,
-          overflow: "hidden",
-          border: "1px solid var(--line)",
-          marginTop: 8,
-        }}
-      />
-    </div>
-  );
+	return (
+		<div>
+			{geoStatus === "prompting" && (
+				<p
+					className="muted small"
+					style={{ marginTop: 6, marginBottom: 6, color: "var(--accent)" }}
+				>
+					Accept the location permission to auto-detect your position, or click
+					the map to place a pin manually.
+				</p>
+			)}
+			{geoStatus === "denied" && (
+				<p className="muted small" style={{ marginTop: 6, marginBottom: 6 }}>
+					Location access denied. Click the map to place a pin manually.
+				</p>
+			)}
+			<div
+				ref={containerRef}
+				style={{
+					width: "100%",
+					height: 250,
+					borderRadius: 10,
+					overflow: "hidden",
+					border: "1px solid var(--line)",
+					marginTop: 8,
+				}}
+			/>
+		</div>
+	);
 }
