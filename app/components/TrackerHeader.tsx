@@ -20,7 +20,7 @@ export default function TrackerHeader({ slug, displayName, lighterpackUrl }: Tra
 
   return (
     <header className="site-header">
-      <div className="wrap" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "14px var(--pad)" }}>
+      <div className="wrap header-inner">
         <div className="brand">
           <div className="brand-title">{displayName}&apos;s PCT Tracker</div>
           <div className="brand-sub">Pacific Crest Trail</div>

@@ -10,6 +10,7 @@ export default function LandingPage() {
             <div className="brand-sub">Pacific Crest Trail</div>
           </div>
           <nav className="tabs">
+            <Link href="/faq" className="tab">FAQ</Link>
             <Link href="/login" className="tab">Login</Link>
           </nav>
         </div>
@@ -42,7 +43,7 @@ export default function LandingPage() {
 
       <footer className="site-footer">
         <div className="wrap">
-          PCT Tracker &middot; Powered by Strava
+          PCT Tracker &middot; <a href="https://github.com/nloomis/pct-tracker" target="_blank" rel="noopener noreferrer">GitHub</a>
         </div>
       </footer>
     </>

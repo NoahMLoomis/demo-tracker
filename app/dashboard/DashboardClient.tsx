@@ -24,14 +24,17 @@ interface DashboardClientProps {
 }
 
 export default function DashboardClient({ user, syncState, initialUpdates }: DashboardClientProps) {
-  const [syncing, setSyncing] = useState(false);
-  const [syncResult, setSyncResult] = useState<string | null>(null);
   const [direction, setDirection] = useState<"NOBO" | "SOBO">(user.direction || "NOBO");
   const [hikeStartDate, setHikeStartDate] = useState(user.hike_start_date || new Date().toISOString().slice(0, 10));
   const [hikeEndDate, setHikeEndDate] = useState(user.hike_end_date || "");
   const [lighterpackUrl, setLighterpackUrl] = useState(user.lighterpack_url || "");
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [syncResult, setSyncResult] = useState<string | null>(null);
+
+  // Track original dates to detect changes
+  const [savedStartDate] = useState(user.hike_start_date || "");
+  const [savedEndDate] = useState(user.hike_end_date || "");
 
   // Updates state
   const [updates, setUpdates] = useState<TrailUpdate[]>(initialUpdates);
@@ -44,25 +47,9 @@ export default function DashboardClient({ user, syncState, initialUpdates }: Das
   const [updSaving, setUpdSaving] = useState(false);
   const [updError, setUpdError] = useState<string | null>(null);
 
-  const handleSync = async () => {
-    setSyncing(true);
-    setSyncResult(null);
-    try {
-      const res = await fetch("/api/sync", { method: "POST" });
-      const data = await res.json();
-      if (res.ok) {
-        setSyncResult(`Synced! ${data.added} new activities added.`);
-      } else {
-        setSyncResult(`Error: ${data.error}`);
-      }
-    } catch {
-      setSyncResult("Sync failed. Please try again.");
-    }
-    setSyncing(false);
-  };
-
   const handleSave = async () => {
     setSaveError(null);
+    setSyncResult(null);
     if (hikeStartDate.length <= 0) {
       setSaveError("hike start date required.");
       return;
@@ -77,6 +64,25 @@ export default function DashboardClient({ user, syncState, initialUpdates }: Das
       if (!res.ok) {
         const data = await res.json();
         setSaveError(data.error || "Save failed.");
+        setSaving(false);
+        return;
+      }
+
+      // Sync if dates changed
+      const datesChanged = hikeStartDate !== savedStartDate || (hikeEndDate || "") !== savedEndDate;
+      if (datesChanged) {
+        setSyncResult("Syncing activities...");
+        try {
+          const syncRes = await fetch("/api/sync", { method: "POST" });
+          const syncData = await syncRes.json();
+          if (syncRes.ok) {
+            setSyncResult(`Saved & synced! ${syncData.added} new activities added.`);
+          } else {
+            setSyncResult(`Saved, but sync failed: ${syncData.error}`);
+          }
+        } catch {
+          setSyncResult("Saved, but sync failed. Try again later.");
+        }
       }
     } catch {
       setSaveError("Save failed. Please try again.");
@@ -185,7 +191,7 @@ export default function DashboardClient({ user, syncState, initialUpdates }: Das
         </p>
         <p style={{ marginTop: 12 }}>
           Public tracker url:{" "}
-          <a href={`/tracker/${user.slug}`} className="accent">
+          <a href={`/tracker/${user.slug}`} target="_blank" className="accent">
             {process.env.NEXT_PUBLIC_BASE_URL}/tracker/{user.slug}
           </a>
         </p>
@@ -224,9 +230,6 @@ export default function DashboardClient({ user, syncState, initialUpdates }: Das
                 SOBO
               </button>
             </div>
-            <p className="muted small" style={{ marginTop: 6, lineHeight: 1.5 }}>
-              Northbound (Campo to Manning Park) or Southbound (Manning Park to Campo).
-            </p>
           </div>
           <label>
             <span className="muted small">Hike Start Date *</span>
@@ -275,19 +278,12 @@ export default function DashboardClient({ user, syncState, initialUpdates }: Das
             {saving ? "Saving..." : "Save Settings"}
           </button>
           {saveError && <p style={{ fontSize: 14, color: "#ff6b6b" }}>{saveError}</p>}
+          {syncResult && <p style={{ fontSize: 14 }}>{syncResult}</p>}
+          <p className="muted small">
+            Last sync: {syncState?.last_sync_at ? new Date(syncState.last_sync_at).toISOString().replace("T", " ").slice(0, 19) + " UTC" : "Never"}
+            {syncState?.status && syncState.status !== "idle" ? ` (${syncState.status})` : ""}
+          </p>
         </div>
-      </div>
-
-      <div className="card">
-        <div className="card-title">Sync</div>
-        <p className="muted small" style={{ marginTop: 4 }}>
-          Last sync: {syncState?.last_sync_at ? new Date(syncState.last_sync_at).toISOString().replace("T", " ").slice(0, 19) + " UTC" : "Never"}
-          {syncState?.status && syncState.status !== "idle" ? ` (${syncState.status})` : ""}
-        </p>
-        <button onClick={handleSync} disabled={syncing} className="button" style={{ marginTop: 12 }}>
-          {syncing ? "Syncing... this could take a minute or two" : "Sync Now"}
-        </button>
-        {syncResult && <p style={{ marginTop: 8, fontSize: 14 }}>{syncResult}</p>}
       </div>
 
       <div className="card">

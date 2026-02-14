@@ -34,6 +34,22 @@ export async function syncUser(userId: string): Promise<{ added: number; skipped
       }
     }
 
+    // Delete activities outside the current date range
+    if (after != null) {
+      await supabase
+        .from("activity_stats")
+        .delete()
+        .eq("user_id", userId)
+        .lt("start_date", new Date(after * 1000).toISOString());
+    }
+    if (before != null) {
+      await supabase
+        .from("activity_stats")
+        .delete()
+        .eq("user_id", userId)
+        .gt("start_date", new Date(before * 1000).toISOString());
+    }
+
     const accessToken = await refreshAccessToken(userId);
     const activities = await fetchActivities(accessToken, after, before);
     activities.sort((a, b) => a.start_date.localeCompare(b.start_date));
