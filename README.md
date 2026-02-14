@@ -68,6 +68,10 @@ The app is designed to deploy on [Vercel](https://vercel.com). Set the same envi
 
 The cron sync endpoint (`/api/cron/sync`) can be triggered by Vercel Cron or any external scheduler using the `CRON_SECRET` for auth.
 
+## Notes
+
+The develop branch exists because vercel automatically re-deploys any pushes on main. So when deployment is ready, merge develop into main and vercel should auto deploy
+
 ## Shoutouts
 This project would not have happended without the reddit user r/Fickle_Bed8196 [post](https://www.reddit.com/r/PacificCrestTrail/comments/1r24p0x) or work on [his app](https://www.reddit.com/r/PacificCrestTrail/comments/1r24p0x).
 
