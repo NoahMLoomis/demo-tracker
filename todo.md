@@ -1,12 +1,7 @@
 ## TODO 
-- put env variables in BW
 - Add FAQ 
     - How to automatically upload garmin / coros activites to strava
-
-- Change deployed env variable NEXT_PUBLIC_BASE_AUTH to be correct deployed url
-
-- Optionally, users can include coordinates in their blog posts.
-
+- is sync state still used?
 ## Possible blockers:
 
 - Vercel / Supabase limiting - could pass by the free tier

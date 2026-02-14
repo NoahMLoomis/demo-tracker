@@ -9,7 +9,7 @@ export const metadata = {
 
 export default async function DashboardPage() {
   const session = await getSession();
-  if (!session) redirect("/login");
+  if (!session) redirect("/api/auth/strava");
 
   const supabase = createServiceClient();
 
@@ -19,7 +19,7 @@ export default async function DashboardPage() {
     .eq("id", session.userId)
     .single();
 
-  if (!user) redirect("/login");
+  if (!user) redirect("/api/auth/strava");
 
   const { data: syncState } = await supabase
     .from("sync_state")
@@ -33,10 +33,26 @@ export default async function DashboardPage() {
     .eq("user_id", session.userId)
     .order("created_at", { ascending: false });
 
+  // Normalize dates to ISO strings so server/client rendering matches
+  const normalizedUpdates = (updates || []).map((u) => ({
+    ...u,
+    created_at: new Date(u.created_at).toISOString(),
+  }));
+
+  // Pre-format the last sync time so it's a stable string
+  const formattedSyncState = syncState
+    ? {
+        ...syncState,
+        last_sync_at: syncState.last_sync_at
+          ? new Date(syncState.last_sync_at).toISOString().replace("T", " ").slice(0, 19) + " UTC"
+          : null,
+      }
+    : null;
+
   return (
     <main className="wrap" style={{ paddingTop: 32 }}>
       <h1 style={{ fontSize: 24, fontWeight: 900, marginBottom: 20 }}>Dashboard</h1>
-      <DashboardClient user={user} syncState={syncState} initialUpdates={updates || []} />
+      <DashboardClient user={user} syncState={formattedSyncState} initialUpdates={normalizedUpdates} />
     </main>
   );
 }

@@ -280,7 +280,7 @@ export default function DashboardClient({ user, syncState, initialUpdates }: Das
           {saveError && <p style={{ fontSize: 14, color: "#ff6b6b" }}>{saveError}</p>}
           {syncResult && <p style={{ fontSize: 14 }}>{syncResult}</p>}
           <p className="muted small">
-            Last sync: {syncState?.last_sync_at ? new Date(syncState.last_sync_at).toISOString().replace("T", " ").slice(0, 19) + " UTC" : "Never"}
+            Last sync: {syncState?.last_sync_at || "Never"}
             {syncState?.status && syncState.status !== "idle" ? ` (${syncState.status})` : ""}
           </p>
         </div>

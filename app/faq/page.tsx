@@ -12,6 +12,17 @@ const faqs: { question: string; answer: ReactNode }[] = [
       "Connect your Strava account and set your hike start date. PCT Tracker automatically syncs your hiking activities from Strava, filters for ones near the Pacific Crest Trail, and displays your progress on a live map. Your public tracker page shows the full PCT with your completed and remaining sections highlighted, along with stats.",
   },
   {
+    question: "How can i setup my garmin/coros watch to upload to strava automatically?",
+    answer: (
+    <>
+      For garmin, follow  
+        <a href="https://support.strava.com/hc/en-us/articles/216918057-Garmin-and-Strava" target="_blank" rel="noopener noreferrer">this guide</a>,
+        for coros, 
+        <a href="https://support.strava.com/hc/en-us/articles/360007816051-COROS-and-Strava" target="_blank" rel="noopener noreferrer">this one</a>,
+    </>
+    ),
+  }
+  {
     question: "What is being stored?",
     answer:
       "Your Strava athlete ID, display name, and OAuth tokens (to sync your activities). For each activity, the only location we store is the one of your most recent activity, to display your location on the map.",
@@ -90,7 +101,7 @@ export default function FAQPage() {
           </div>
           <nav className="tabs">
             <Link href="/" className="tab">Home</Link>
-            <Link href="/login" className="tab">Login</Link>
+            <Link href="/api/auth/strava" className="tab">Login</Link>
           </nav>
         </div>
       </header>

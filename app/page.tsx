@@ -11,7 +11,7 @@ export default function LandingPage() {
           </div>
           <nav className="tabs">
             <Link href="/faq" className="tab">FAQ</Link>
-            <Link href="/login" className="tab">Login</Link>
+            <Link href="/api/auth/strava" className="tab">Login</Link>
           </nav>
         </div>
       </header>
@@ -25,9 +25,12 @@ export default function LandingPage() {
             Connect your Strava account and get a live map of your Pacific Crest
             Trail progress. Share your public tracker with friends and family.
           </p>
-          <Link href="/login" className="button" style={{ fontSize: 16, padding: "14px 28px" }}>
+          <Link href="/api/auth/strava" className="button" style={{ fontSize: 16, padding: "14px 28px" }}>
             Get Started with Strava
           </Link>
+          <p className="muted" style={{ fontSize: 14, marginTop: 16 }}>
+            or <Link href="/tracker/jane-doe" style={{ color: "var(--accent)" }}>see an example</Link>
+          </p>
 
           <div className="card" style={{ marginTop: 48, textAlign: "left" }}>
             <div className="card-title">How it works</div>
