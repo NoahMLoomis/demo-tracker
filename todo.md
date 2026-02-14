@@ -3,11 +3,13 @@
 - Add a bug report button -> Github issue "Bug: xxx"
 - Add a feautre request button -> Github "Feature: xxx"
 - Add favicon
+- SEO
 - make fake strava data for Jane doe so stats are correct
-- Would it be possible, instead of getting the activity stats, to use only the last position, then calculate the stats from that using the NOBO or SOBO to determine starting point?
+- Would it be possible, instead of getting the activity stats, to use only the last position, then calculate the stats from that using the NOBO or SOBO to determine starting point? This could reduce even further the requests made to strava
+- Add metadata for SEO
 ## Possible blockers:
 
-- Vercel / Supabase limiting - could pass by the free tier
+- Vercel / Supabase limiting - could pass by the free tier. Would have to look at using a VPS instead, and could always forgo supabase with an actual postgres server.
 
 - Strava API usage - 200 requests every 15 minutes, with up to 2,000 requests per day
 

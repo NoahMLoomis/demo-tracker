@@ -76,9 +76,21 @@ const faqs: { question: string; answer: ReactNode }[] = [
 		),
 	},
 	{
-		question: "Is this free?",
-		answer:
-			"Yes, PCT Tracker is completely free to use. With no ads, because ads suck.",
+		question: "Is this free, and is it open source?",
+		answer: (
+			<>
+				Yes, PCT Tracker is completely free to use. With no ads, because ads
+				suck. It's also OSS, you can check out the source code on{" "}
+				<a
+					href="https://github.com/NoahMLoomis/pct-tracker"
+					target="_blank"
+					rel="noopener noreferrer"
+				>
+					Github
+				</a>
+				, if you see and issue or have a feature request, please do it there.
+			</>
+		),
 	},
 	{
 		question: "Why create this?",
