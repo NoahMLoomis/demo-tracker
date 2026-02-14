@@ -7,6 +7,7 @@ Most of this app was built in a weekend with Claude Code.
 ## Prerequisites
 
 - Node.js 18+
+- pnpm (`npm i -g pnpm`)
 - A [Supabase](https://supabase.com) project
 - A [Strava API application](https://www.strava.com/settings/api)
 
@@ -66,3 +67,8 @@ Most of this app was built in a weekend with Claude Code.
 The app is designed to deploy on [Vercel](https://vercel.com). Set the same environment variables from `.env.example` in your Vercel project settings, with `NEXT_PUBLIC_BASE_URL` set to your production URL.
 
 The cron sync endpoint (`/api/cron/sync`) can be triggered by Vercel Cron or any external scheduler using the `CRON_SECRET` for auth.
+
+## Shoutouts
+This project would not have happended without the reddit user r/Fickle_Bed8196 [post](https://www.reddit.com/r/PacificCrestTrail/comments/1r24p0x) or work on [his app](https://www.reddit.com/r/PacificCrestTrail/comments/1r24p0x).
+
+[Derek Carr's](https://www.dcarr.com/) 2025 PCT GPX file also made my job much easier 
