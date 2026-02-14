@@ -22,6 +22,9 @@ export async function POST(request: NextRequest) {
   if (body.hike_end_date !== undefined){
    updates.hike_end_date = body.hike_end_date;
   }
+  if (body.direction === "NOBO" || body.direction === "SOBO") {
+    updates.direction = body.direction;
+  }
   if (body.lighterpack_url !== undefined) {
     updates.lighterpack_url = body.lighterpack_url;
   }

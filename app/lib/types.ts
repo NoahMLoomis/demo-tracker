@@ -5,6 +5,7 @@ export interface User {
   slug: string;
   hike_start_date: string;
   hike_end_date: string | null;
+  direction: "NOBO" | "SOBO";
   lighterpack_url: string | null;
   strava_access_token: string;
   strava_refresh_token: string;

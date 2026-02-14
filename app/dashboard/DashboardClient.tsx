@@ -26,6 +26,7 @@ interface DashboardClientProps {
 export default function DashboardClient({ user, syncState, initialUpdates }: DashboardClientProps) {
   const [syncing, setSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState<string | null>(null);
+  const [direction, setDirection] = useState<"NOBO" | "SOBO">(user.direction || "NOBO");
   const [hikeStartDate, setHikeStartDate] = useState(user.hike_start_date || new Date().toISOString().slice(0, 10));
   const [hikeEndDate, setHikeEndDate] = useState(user.hike_end_date || "");
   const [lighterpackUrl, setLighterpackUrl] = useState(user.lighterpack_url || "");
@@ -71,7 +72,7 @@ export default function DashboardClient({ user, syncState, initialUpdates }: Das
       const res = await fetch("/api/settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ hike_start_date: hikeStartDate, hike_end_date: hikeEndDate || null, lighterpack_url: lighterpackUrl || null }),
+        body: JSON.stringify({ direction, hike_start_date: hikeStartDate, hike_end_date: hikeEndDate || null, lighterpack_url: lighterpackUrl || null }),
       });
       if (!res.ok) {
         const data = await res.json();
@@ -176,7 +177,6 @@ export default function DashboardClient({ user, syncState, initialUpdates }: Das
   return (
     <div style={{ display: "grid", gap: 14, maxWidth: 600 }}>
       <div className="card">
-        <div className="card-title">Profile</div>
         <p style={{ marginTop: 8 }}>
           <strong>{user.display_name}</strong>
         </p>
@@ -184,9 +184,9 @@ export default function DashboardClient({ user, syncState, initialUpdates }: Das
           Strava Athlete ID: {user.strava_athlete_id}
         </p>
         <p style={{ marginTop: 12 }}>
-          Public tracker:{" "}
+          Public tracker url:{" "}
           <a href={`/tracker/${user.slug}`} className="accent">
-            /tracker/{user.slug}
+            {process.env.NEXT_PUBLIC_BASE_URL}/tracker/{user.slug}
           </a>
         </p>
       </div>
@@ -194,6 +194,40 @@ export default function DashboardClient({ user, syncState, initialUpdates }: Das
       <div className="card">
         <div className="card-title">Settings</div>
         <div style={{ display: "grid", gap: 12, marginTop: 12 }}>
+          <div>
+            <span className="muted small">Direction *</span>
+            <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
+              <button
+                type="button"
+                onClick={() => setDirection("NOBO")}
+                className="button"
+                style={{
+                  background: direction === "NOBO" ? "var(--accent)" : "var(--card)",
+                  color: direction === "NOBO" ? "#0d1117" : "var(--text)",
+                  border: "1px solid var(--line)",
+                  fontWeight: direction === "NOBO" ? 700 : 400,
+                }}
+              >
+                NOBO
+              </button>
+              <button
+                type="button"
+                onClick={() => setDirection("SOBO")}
+                className="button"
+                style={{
+                  background: direction === "SOBO" ? "var(--accent)" : "var(--card)",
+                  color: direction === "SOBO" ? "#0d1117" : "var(--text)",
+                  border: "1px solid var(--line)",
+                  fontWeight: direction === "SOBO" ? 700 : 400,
+                }}
+              >
+                SOBO
+              </button>
+            </div>
+            <p className="muted small" style={{ marginTop: 6, lineHeight: 1.5 }}>
+              Northbound (Campo to Manning Park) or Southbound (Manning Park to Campo).
+            </p>
+          </div>
           <label>
             <span className="muted small">Hike Start Date *</span>
             <input
@@ -265,17 +299,16 @@ export default function DashboardClient({ user, syncState, initialUpdates }: Das
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Day 5: Kennedy Meadows"
               style={inputStyle}
             />
           </label>
           <label>
-            <span className="muted small">Body *</span>
+            <span className="muted small">Body * <span style={{ color: body.length > 500 ? "#ff6b6b" : "inherit" }}>({body.length}/500)</span></span>
             <textarea
               value={body}
               onChange={(e) => setBody(e.target.value)}
-              placeholder="Write your trail update..."
               rows={5}
+              maxLength={500}
               style={{ ...inputStyle, resize: "vertical" as const }}
             />
           </label>
@@ -326,7 +359,7 @@ export default function DashboardClient({ user, syncState, initialUpdates }: Das
                     <div>
                       <div style={{ fontWeight: 700 }}>{u.title}</div>
                       <div className="muted small" style={{ marginTop: 2 }}>
-                        {new Date(u.created_at).toLocaleDateString()}
+                        {u.created_at.slice(0, 10)}
                         {u.lat != null && u.lon != null && " \u00B7 Has location"}
                       </div>
                       <div className="muted small" style={{ marginTop: 4 }}>

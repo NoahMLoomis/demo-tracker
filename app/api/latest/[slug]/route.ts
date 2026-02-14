@@ -10,7 +10,7 @@ export async function GET(
 
   const { data: user } = await supabase
     .from("users")
-    .select("id")
+    .select("id, direction")
     .eq("slug", slug)
     .single();
 
@@ -25,7 +25,7 @@ export async function GET(
     .single();
 
   if (!pos) {
-    return NextResponse.json({ lat: 0, lon: 0, ts: "" });
+    return NextResponse.json({ lat: 0, lon: 0, ts: "", direction: user.direction || "NOBO" });
   }
 
   return NextResponse.json(
@@ -33,6 +33,7 @@ export async function GET(
       lat: pos.lat,
       lon: pos.lon,
       ts: pos.activity_date || "",
+      direction: user.direction || "NOBO",
     },
     {
       headers: {

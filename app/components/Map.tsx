@@ -42,6 +42,22 @@ function createUpdateMarkerEl(): HTMLDivElement {
   return el;
 }
 
+// Find the index of the closest point on the trail to a given lat/lon
+function findNearestIndex(coords: [number, number][], lon: number, lat: number): number {
+  let bestIdx = 0;
+  let bestDist = Infinity;
+  for (let i = 0; i < coords.length; i++) {
+    const dx = coords[i][0] - lon;
+    const dy = coords[i][1] - lat;
+    const d = dx * dx + dy * dy;
+    if (d < bestDist) {
+      bestDist = d;
+      bestIdx = i;
+    }
+  }
+  return bestIdx;
+}
+
 interface MapProps {
   slug: string;
   updates?: TrailUpdate[];
@@ -52,6 +68,7 @@ export default function MapView({ slug, updates }: MapProps) {
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markerRef = useRef<maplibregl.Marker | null>(null);
   const updateMarkersRef = useRef<maplibregl.Marker[]>([]);
+  const trailCoordsRef = useRef<[number, number][] | null>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -140,6 +157,41 @@ export default function MapView({ slug, updates }: MapProps) {
       }
     }
 
+    const splitTrail = (splitIdx: number, direction: "NOBO" | "SOBO") => {
+      const coords = trailCoordsRef.current;
+      if (!coords || coords.length === 0) return;
+
+      // Trail coords go south-to-north (Campo → Manning Park)
+      // NOBO completed = start..splitIdx, remaining = splitIdx..end
+      // SOBO completed = splitIdx..end, remaining = start..splitIdx
+      let completedCoords: [number, number][];
+      let remainingCoords: [number, number][];
+
+      if (direction === "NOBO") {
+        completedCoords = coords.slice(0, splitIdx + 1);
+        remainingCoords = coords.slice(splitIdx);
+      } else {
+        completedCoords = coords.slice(splitIdx);
+        remainingCoords = coords.slice(0, splitIdx + 1);
+      }
+
+      const completedGeoJSON = {
+        type: "Feature" as const,
+        properties: {},
+        geometry: { type: "LineString" as const, coordinates: completedCoords },
+      };
+      const remainingGeoJSON = {
+        type: "Feature" as const,
+        properties: {},
+        geometry: { type: "LineString" as const, coordinates: remainingCoords },
+      };
+
+      if (map.getSource("pct-completed")) {
+        (map.getSource("pct-completed") as maplibregl.GeoJSONSource).setData(completedGeoJSON);
+        (map.getSource("pct-remaining") as maplibregl.GeoJSONSource).setData(remainingGeoJSON);
+      }
+    };
+
     const updateMarker = async () => {
       try {
         const res = await fetch(`/api/latest/${slug}`, { cache: "no-store" });
@@ -155,24 +207,58 @@ export default function MapView({ slug, updates }: MapProps) {
         } else {
           markerRef.current.setLngLat(lngLat);
         }
+
+        // Split trail at hiker position
+        const coords = trailCoordsRef.current;
+        if (coords) {
+          const splitIdx = findNearestIndex(coords, pos.lon, pos.lat);
+          splitTrail(splitIdx, pos.direction || "NOBO");
+        }
       } catch {
         // silently ignore fetch errors
       }
     };
 
-    map.on("load", () => {
+    map.on("load", async () => {
       map.addControl(new BasemapToggle(), "top-right");
 
-      // Add static PCT trail
+      // Load the PCT trail GeoJSON and cache coords
+      try {
+        const trailRes = await fetch("/pct-trail.geojson");
+        const trailData = await trailRes.json();
+        const feature = trailData.features?.[0];
+        if (feature?.geometry?.coordinates) {
+          trailCoordsRef.current = feature.geometry.coordinates;
+        }
+      } catch {
+        // fall back to just the full trail
+      }
+
+      // Full trail as dim background (always visible)
       map.addSource("pct-trail", {
         type: "geojson",
         data: "/pct-trail.geojson",
       });
 
       map.addLayer({
-        id: "pct-glow",
+        id: "pct-bg",
         type: "line",
         source: "pct-trail",
+        paint: {
+          "line-color": "rgba(255,255,255,0.15)",
+          "line-width": 2,
+          "line-opacity": 1,
+        },
+      });
+
+      // Completed section (bright green)
+      const emptyLine = { type: "Feature" as const, properties: {}, geometry: { type: "LineString" as const, coordinates: [] as [number, number][] } };
+
+      map.addSource("pct-completed", { type: "geojson", data: emptyLine });
+      map.addLayer({
+        id: "pct-completed-glow",
+        type: "line",
+        source: "pct-completed",
         paint: {
           "line-color": "#7ee787",
           "line-width": 12,
@@ -180,19 +266,42 @@ export default function MapView({ slug, updates }: MapProps) {
           "line-blur": 6,
         },
       });
-
       map.addLayer({
-        id: "pct-main",
+        id: "pct-completed-main",
         type: "line",
-        source: "pct-trail",
+        source: "pct-completed",
         paint: {
           "line-color": "#7ee787",
-          "line-width": 3,
-          "line-opacity": 0.85,
+          "line-width": 3.5,
+          "line-opacity": 0.9,
         },
       });
 
-      // Fetch marker position
+      // Remaining section (red/orange, clearly distinct)
+      map.addSource("pct-remaining", { type: "geojson", data: emptyLine });
+      map.addLayer({
+        id: "pct-remaining-glow",
+        type: "line",
+        source: "pct-remaining",
+        paint: {
+          "line-color": "#ff6b6b",
+          "line-width": 10,
+          "line-opacity": 0.2,
+          "line-blur": 5,
+        },
+      });
+      map.addLayer({
+        id: "pct-remaining-main",
+        type: "line",
+        source: "pct-remaining",
+        paint: {
+          "line-color": "#ff6b6b",
+          "line-width": 3,
+          "line-opacity": 0.7,
+        },
+      });
+
+      // Fetch marker position and split trail
       updateMarker();
       const interval = setInterval(updateMarker, 60_000);
       map.on("remove", () => clearInterval(interval));
@@ -216,7 +325,7 @@ export default function MapView({ slug, updates }: MapProps) {
     for (const u of updates) {
       if (u.lat == null || u.lon == null) continue;
 
-      const snippet = u.body.length > 100 ? u.body.slice(0, 100) + "..." : u.body;
+      const snippet = u.body.length > 20 ? u.body.slice(0, 20) + "..." : u.body;
       const popup = new maplibregl.Popup({ closeButton: true, closeOnClick: true, maxWidth: "280px" })
         .setHTML(
           `<div class="pct-popup">

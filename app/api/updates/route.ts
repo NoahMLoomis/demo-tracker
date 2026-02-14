@@ -16,6 +16,9 @@ export async function POST(request: NextRequest) {
     if (!body.title?.trim() || !body.body?.trim()) {
       return NextResponse.json({ error: "Title and body are required" }, { status: 400 });
     }
+    if (body.body.trim().length > 500) {
+      return NextResponse.json({ error: "Body must be 500 characters or less" }, { status: 400 });
+    }
 
     const { data, error } = await supabase
       .from("trail_updates")
@@ -42,6 +45,9 @@ export async function POST(request: NextRequest) {
     }
     if (!body.title?.trim() || !body.body?.trim()) {
       return NextResponse.json({ error: "Title and body are required" }, { status: 400 });
+    }
+    if (body.body.trim().length > 300) {
+      return NextResponse.json({ error: "Body must be 300 characters or less" }, { status: 400 });
     }
 
     const { error } = await supabase
