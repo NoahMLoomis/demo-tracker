@@ -23,7 +23,16 @@ export default function UpdatesPage() {
 	useEffect(() => {
 		fetch(`/api/updates/${slug}`)
 			.then((r) => r.json())
-			.then((data) => setUpdates(data))
+			.then((data) => {
+				setUpdates(data);
+				// Scroll to the anchored update after data renders
+				requestAnimationFrame(() => {
+					const hash = window.location.hash.slice(1);
+					if (hash) {
+						document.getElementById(hash)?.scrollIntoView({ behavior: "smooth", block: "start" });
+					}
+				});
+			})
 			.catch(() => setUpdates([]));
 	}, [slug]);
 

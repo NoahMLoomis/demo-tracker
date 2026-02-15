@@ -1,14 +1,15 @@
 ## TODO 
 - is sync state still used?
+- is the activity table still being used?
 - Add a bug report button -> Github issue "Bug: xxx"
 - Add a feautre request button -> Github "Feature: xxx"
 - Add favicon
 - SEO
-- make fake strava data for Jane doe so stats are correct
 - Would it be possible, instead of getting the activity stats, to use only the last position, then calculate the stats from that using the NOBO or SOBO to determine starting point? This could reduce even further the requests made to strava
 - Add metadata for SEO
 - Verify phone usability
 - Add id to each blog post so linking to them from the map brings the user to it directly, not just the updates page
+
 ## Possible blockers:
 
 - Vercel / Supabase limiting - could pass by the free tier. Would have to look at using a VPS instead, and could always forgo supabase with an actual postgres server.

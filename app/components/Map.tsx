@@ -121,7 +121,7 @@ export default function MapView({ slug, updates }: MapProps) {
 			container: containerRef.current,
 			style,
 			center: [-117.5, 41],
-			zoom: 4,
+			zoom: 3.8,
 		});
 
 		mapRef.current = map;
@@ -224,31 +224,27 @@ export default function MapView({ slug, updates }: MapProps) {
 		};
 
 		const updateMarker = async () => {
-			try {
-				const res = await fetch(`/api/latest/${slug}`, { cache: "no-store" });
-				if (!res.ok) return;
-				const pos = await res.json();
-				if (!pos.lat && !pos.lon) return;
+			const res = await fetch(`/api/latest/${slug}`, { cache: "no-store" });
+			if (!res.ok) return;
+			const pos = await res.json();
+			if (!pos.lat && !pos.lon) return;
 
-				const lngLat: [number, number] = [pos.lon, pos.lat];
-				if (!markerRef.current) {
-					markerRef.current = new maplibregl.Marker({
-						element: createBlinkMarkerEl(),
-					})
-						.setLngLat(lngLat)
-						.addTo(map);
-				} else {
-					markerRef.current.setLngLat(lngLat);
-				}
+			const lngLat: [number, number] = [pos.lon, pos.lat];
+			if (!markerRef.current) {
+				markerRef.current = new maplibregl.Marker({
+					element: createBlinkMarkerEl(),
+				})
+					.setLngLat(lngLat)
+					.addTo(map);
+			} else {
+				markerRef.current.setLngLat(lngLat);
+			}
 
-				// Split trail at hiker position
-				const coords = trailCoordsRef.current;
-				if (coords) {
-					const splitIdx = findNearestIndex(coords, pos.lon, pos.lat);
-					splitTrail(splitIdx, pos.direction || "NOBO");
-				}
-			} catch {
-				// silently ignore fetch errors
+			// Split trail at hiker position
+			const coords = trailCoordsRef.current;
+			if (coords) {
+				const splitIdx = findNearestIndex(coords, pos.lon, pos.lat);
+				splitTrail(splitIdx, pos.direction || "NOBO");
 			}
 		};
 
