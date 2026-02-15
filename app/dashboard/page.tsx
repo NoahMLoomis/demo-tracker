@@ -33,13 +33,11 @@ export default async function DashboardPage() {
 		.eq("user_id", session.userId)
 		.order("created_at", { ascending: false });
 
-	// Normalize dates to ISO strings so server/client rendering matches
 	const normalizedUpdates = (updates || []).map((u) => ({
 		...u,
 		created_at: new Date(u.created_at).toISOString(),
 	}));
 
-	// Pre-format the last sync time so it's a stable string
 	const formattedSyncState = syncState
 		? {
 				...syncState,
@@ -53,10 +51,8 @@ export default async function DashboardPage() {
 		: null;
 
 	return (
-		<main className="wrap" style={{ paddingTop: 32 }}>
-			<h1 style={{ fontSize: 24, fontWeight: 900, marginBottom: 20 }}>
-				Dashboard
-			</h1>
+		<main className="max-w-[980px] mx-auto px-4 pt-8">
+			<h1 className="text-2xl font-black mb-5">Dashboard</h1>
 			<DashboardClient
 				user={user}
 				syncState={formattedSyncState}

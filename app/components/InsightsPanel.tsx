@@ -109,23 +109,33 @@ function computeInsights(stats: TrailStats) {
 function DayChip({ label, item }: { label: string; item: DayItem | null }) {
 	if (!item) {
 		return (
-			<div className="pct-chip">
-				<div className="label">{label}</div>
-				<div className="pct-day-km">{"\u2014"}</div>
+			<div className="bg-chip border border-chip-border rounded-2xl p-3">
+				<div className="text-xs text-stat-label mb-1.5 flex items-center gap-2">
+					{label}
+				</div>
+				<div className="text-base font-black text-stat-value leading-none">
+					{"\u2014"}
+				</div>
 			</div>
 		);
 	}
 	const km = item.distM * KM_PER_M;
 	const mi = item.distM * MI_PER_M;
 	return (
-		<div className="pct-chip">
-			<div className="label">{label}</div>
-			<div className="pct-day-km">{fmtNumber(km, 1)} km</div>
-			<div className="pct-day-meta">
+		<div className="bg-chip border border-chip-border rounded-2xl p-3">
+			<div className="text-xs text-stat-label mb-1.5 flex items-center gap-2">
+				{label}
+			</div>
+			<div className="text-base font-black text-stat-value leading-none">
+				{fmtNumber(km, 1)} km
+			</div>
+			<div className="mt-1.5 text-xs text-day-meta font-bold">
 				{fmtNumber(mi, 1)} mi &middot;{" "}
 				{item.timeS != null ? fmtDuration(item.timeS) : "\u2014"}
 			</div>
-			<div className="pct-day-date">{item.dateLabel}</div>
+			<div className="mt-1.5 text-xs text-day-date font-semibold">
+				{item.dateLabel}
+			</div>
 		</div>
 	);
 }
@@ -147,57 +157,64 @@ export default function InsightsPanel({ stats }: InsightsPanelProps) {
 	);
 
 	return (
-		<div className="card">
-			<div className="card-title">Insights</div>
-			<div className="pct-sections">
-				<div className="pct-section">
-					<div className="pct-section-title">Progress</div>
-					<div className="pct-rows">
-						<div className="pct-row">
+		<div className="bg-card border border-line rounded-2xl p-[18px]">
+			<div className="font-bold mb-1">Insights</div>
+			<div className="grid gap-2.5">
+				<div className="bg-chip border border-chip-border rounded-2xl px-3 py-2.5">
+					<div className="font-black text-[13px] tracking-[0.2px] text-[rgba(245,248,255,0.9)] mb-2">
+						Progress
+					</div>
+					<div className="grid gap-1.5">
+						<div className="grid grid-cols-[1fr_auto] gap-2.5 text-[13px] text-stat-row">
 							<span>PCT completed</span>
-							<b>
+							<b className="text-stat-row-bold font-extrabold">
 								{pctTxt} &middot; {fmtNumber(s.totalKm, 1)} km of{" "}
 								{fmtInt(PCT_TOTAL_KM)} km &middot; {fmtNumber(s.totalMi, 1)} mi
 								of {fmtInt(PCT_TOTAL_MI)} mi
 							</b>
 						</div>
-						<div className="pct-progressbar" aria-label="PCT progress">
+						<div
+							className="h-2 rounded-full bg-progress-track border border-progress-border overflow-hidden mt-2"
+							aria-label="PCT progress"
+						>
 							<div
 								className="pct-progressfill"
 								style={{ width: `${pctWidth}%` }}
 							/>
 						</div>
-						<div className="pct-row" style={{ marginTop: 6 }}>
+						<div className="grid grid-cols-[1fr_auto] gap-2.5 text-[13px] text-stat-row mt-1.5">
 							<span>Remaining</span>
-							<b>
+							<b className="text-stat-row-bold font-extrabold">
 								{fmtNumber(s.remainingKm, 1)} km / {fmtNumber(s.remainingMi, 1)}{" "}
 								mi
 							</b>
 						</div>
 					</div>
 
-					<div className="pct-section" style={{ marginTop: 10 }}>
-						<div className="pct-section-title">Timeline</div>
-						<div className="pct-rows">
-							<div className="pct-row">
+					<div className="bg-chip border border-chip-border rounded-2xl px-3 py-2.5 mt-2.5">
+						<div className="font-black text-[13px] tracking-[0.2px] text-[rgba(245,248,255,0.9)] mb-2">
+							Timeline
+						</div>
+						<div className="grid gap-1.5">
+							<div className="grid grid-cols-[1fr_auto] gap-2.5 text-[13px] text-stat-row">
 								<span>First activity</span>
-								<b>
+								<b className="text-stat-row-bold font-extrabold">
 									{s.firstTs != null
 										? new Date(s.firstTs).toLocaleDateString()
 										: "\u2014"}
 								</b>
 							</div>
-							<div className="pct-row">
+							<div className="grid grid-cols-[1fr_auto] gap-2.5 text-[13px] text-stat-row">
 								<span>Last activity</span>
-								<b>
+								<b className="text-stat-row-bold font-extrabold">
 									{s.lastTs != null
 										? new Date(s.lastTs).toLocaleDateString()
 										: "\u2014"}
 								</b>
 							</div>
-							<div className="pct-row">
+							<div className="grid grid-cols-[1fr_auto] gap-2.5 text-[13px] text-stat-row">
 								<span>Days</span>
-								<b>
+								<b className="text-stat-row-bold font-extrabold">
 									{s.activeDays || 0} active days
 									{s.restDays != null ? ` \u00B7 ${s.restDays} rest days` : ""}
 								</b>
@@ -205,7 +222,7 @@ export default function InsightsPanel({ stats }: InsightsPanelProps) {
 						</div>
 					</div>
 
-					<div className="pct-daychips">
+					<div className="grid grid-cols-2 max-[680px]:grid-cols-1 gap-2.5 mt-2.5">
 						<DayChip label="Longest Day" item={s.longest} />
 						<DayChip label="Shortest Day" item={s.shortest} />
 					</div>

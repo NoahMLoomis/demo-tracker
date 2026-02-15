@@ -59,7 +59,6 @@ export default function LocationPicker({
 		map.addControl(new maplibregl.NavigationControl(), "top-right");
 
 		map.on("load", () => {
-			// Add PCT trail
 			map.addSource("pct-trail", {
 				type: "geojson",
 				data: "/pct-trail.geojson",
@@ -89,11 +88,9 @@ export default function LocationPicker({
 			});
 		});
 
-		// Place initial marker if editing
 		if (lat != null && lon != null) {
 			placeMarker(map, lon, lat);
 		} else {
-			// Try to get user's location via browser API
 			if ("geolocation" in navigator) {
 				setGeoStatus("prompting");
 				navigator.geolocation.getCurrentPosition(
@@ -123,34 +120,24 @@ export default function LocationPicker({
 			map.remove();
 			mapRef.current = null;
 		};
-	}, []); // eslint-disable-line react-hooks/exhaustive-deps
+	}, []);
 
 	return (
 		<div>
 			{geoStatus === "prompting" && (
-				<p
-					className="muted small"
-					style={{ marginTop: 6, marginBottom: 6, color: "var(--accent)" }}
-				>
+				<p className="text-muted text-xs my-1.5 !text-accent">
 					Accept the location permission to auto-detect your position, or click
 					the map to place a pin manually.
 				</p>
 			)}
 			{geoStatus === "denied" && (
-				<p className="muted small" style={{ marginTop: 6, marginBottom: 6 }}>
+				<p className="text-muted text-xs my-1.5">
 					Location access denied. Click the map to place a pin manually.
 				</p>
 			)}
 			<div
 				ref={containerRef}
-				style={{
-					width: "100%",
-					height: 250,
-					borderRadius: 10,
-					overflow: "hidden",
-					border: "1px solid var(--line)",
-					marginTop: 8,
-				}}
+				className="w-full h-[250px] rounded-[10px] overflow-hidden border border-line mt-2"
 			/>
 		</div>
 	);

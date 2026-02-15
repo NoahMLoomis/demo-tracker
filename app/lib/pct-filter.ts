@@ -1,5 +1,5 @@
 const R = 6_371_000;
-const PCT_PROXIMITY_M = 15_000; // 15 km
+const PCT_PROXIMITY_M = 15_000;
 
 function haversineM(
 	lat1: number,
@@ -17,7 +17,6 @@ function haversineM(
 	return 2 * R * Math.asin(Math.sqrt(a));
 }
 
-// ~44 waypoints along the PCT centerline
 const W: [number, number][] = [
 	[32.59, -116.47],
 	[32.87, -116.51],

@@ -15,7 +15,6 @@ export async function GET(request: NextRequest) {
 		return NextResponse.redirect(new URL("/", request.nextUrl.origin));
 	}
 
-	// Exchange code for tokens
 	const tokenRes = await fetch("https://www.strava.com/oauth/token", {
 		method: "POST",
 		headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -43,7 +42,6 @@ export async function GET(request: NextRequest) {
 		`${athlete.firstname || ""} ${athlete.lastname || ""}`.trim() || "Hiker";
 	const baseSlug = slugify(displayName);
 
-	// Check if user already exists
 	const { data: existingUser } = await supabase
 		.from("users")
 		.select("id, slug")
@@ -53,7 +51,6 @@ export async function GET(request: NextRequest) {
 	let userId: string;
 
 	if (existingUser) {
-		// Update tokens
 		await supabase
 			.from("users")
 			.update({
@@ -67,7 +64,6 @@ export async function GET(request: NextRequest) {
 
 		userId = existingUser.id;
 	} else {
-		// Generate unique slug
 		let slug = baseSlug;
 		let attempt = 0;
 		while (true) {
@@ -106,7 +102,6 @@ export async function GET(request: NextRequest) {
 
 		userId = newUser.id;
 
-		// Initialize sync state
 		await supabase.from("sync_state").insert({ user_id: userId });
 	}
 

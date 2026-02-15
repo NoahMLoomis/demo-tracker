@@ -42,7 +42,6 @@ function createUpdateMarkerEl(): HTMLDivElement {
 	return el;
 }
 
-// Find the index of the closest point on the trail to a given lat/lon
 function findNearestIndex(
 	coords: [number, number][],
 	lon: number,
@@ -131,7 +130,6 @@ export default function MapView({ slug, updates }: MapProps) {
 			"top-right",
 		);
 
-		// Basemap toggle
 		class BasemapToggle implements maplibregl.IControl {
 			_container?: HTMLDivElement;
 			_map?: maplibregl.Map;
@@ -188,9 +186,6 @@ export default function MapView({ slug, updates }: MapProps) {
 			const coords = trailCoordsRef.current;
 			if (!coords || coords.length === 0) return;
 
-			// Trail coords go south-to-north (Campo → Manning Park)
-			// NOBO completed = start..splitIdx, remaining = splitIdx..end
-			// SOBO completed = splitIdx..end, remaining = start..splitIdx
 			let completedCoords: [number, number][];
 			let remainingCoords: [number, number][];
 
@@ -240,7 +235,6 @@ export default function MapView({ slug, updates }: MapProps) {
 				markerRef.current.setLngLat(lngLat);
 			}
 
-			// Split trail at hiker position
 			const coords = trailCoordsRef.current;
 			if (coords) {
 				const splitIdx = findNearestIndex(coords, pos.lon, pos.lat);
@@ -251,7 +245,6 @@ export default function MapView({ slug, updates }: MapProps) {
 		map.on("load", async () => {
 			map.addControl(new BasemapToggle(), "top-right");
 
-			// Load the PCT trail GeoJSON and cache coords
 			try {
 				const trailRes = await fetch("/pct-trail.geojson");
 				const trailData = await trailRes.json();
@@ -259,11 +252,8 @@ export default function MapView({ slug, updates }: MapProps) {
 				if (feature?.geometry?.coordinates) {
 					trailCoordsRef.current = feature.geometry.coordinates;
 				}
-			} catch {
-				// fall back to just the full trail
-			}
+			} catch {}
 
-			// Full trail as dim background (always visible)
 			map.addSource("pct-trail", {
 				type: "geojson",
 				data: "/pct-trail.geojson",
@@ -280,7 +270,6 @@ export default function MapView({ slug, updates }: MapProps) {
 				},
 			});
 
-			// Completed section (bright green)
 			const emptyLine = {
 				type: "Feature" as const,
 				properties: {},
@@ -313,7 +302,6 @@ export default function MapView({ slug, updates }: MapProps) {
 				},
 			});
 
-			// Remaining section (red/orange, clearly distinct)
 			map.addSource("pct-remaining", { type: "geojson", data: emptyLine });
 			map.addLayer({
 				id: "pct-remaining-glow",
@@ -337,7 +325,6 @@ export default function MapView({ slug, updates }: MapProps) {
 				},
 			});
 
-			// Fetch marker position and split trail
 			updateMarker();
 			const interval = setInterval(updateMarker, 60_000);
 			map.on("remove", () => clearInterval(interval));
@@ -349,12 +336,10 @@ export default function MapView({ slug, updates }: MapProps) {
 		};
 	}, [slug]);
 
-	// Sync update markers when updates prop changes
 	useEffect(() => {
 		const map = mapRef.current;
 		if (!map || !updates) return;
 
-		// Clear existing update markers
 		for (const m of updateMarkersRef.current) m.remove();
 		updateMarkersRef.current = [];
 
@@ -383,5 +368,10 @@ export default function MapView({ slug, updates }: MapProps) {
 		}
 	}, [updates, slug]);
 
-	return <div ref={containerRef} className="map" />;
+	return (
+		<div
+			ref={containerRef}
+			className="h-[56vh] min-h-[380px] rounded-2xl overflow-hidden border border-line shadow-[0_10px_30px_rgba(0,0,0,0.35)]"
+		/>
+	);
 }

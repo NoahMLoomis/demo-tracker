@@ -60,52 +60,72 @@ export default function StatsPanel({ stats }: StatsPanelProps) {
 			: "";
 
 	return (
-		<div className="card">
-			<div className="card-title">Stats</div>
-			<div className="pct-stats-wrap">
-				<div className="pct-stat-hero">
-					<div className="label">Total Distance</div>
-					<div className="big">
-						<div className="primary">{fmtNumber(totalKm, 1)} km</div>
-						<div className="secondary">{fmtNumber(totalMi, 1)} mi</div>
+		<div className="bg-card border border-line rounded-2xl p-[18px]">
+			<div className="font-bold mb-1">Stats</div>
+			<div className="grid gap-2.5">
+				<div className="bg-hero border border-hero-border rounded-2xl p-3.5">
+					<div className="text-xs tracking-[0.2px] text-stat-label mb-1.5">
+						Total Distance
+					</div>
+					<div className="flex flex-wrap items-baseline gap-2.5">
+						<div className="text-[26px] font-black text-stat-primary leading-none">
+							{fmtNumber(totalKm, 1)} km
+						</div>
+						<div className="text-sm text-stat-secondary font-bold">
+							{fmtNumber(totalMi, 1)} mi
+						</div>
 					</div>
 				</div>
 
-				<div className="pct-chip-grid">
-					<div className="pct-chip">
-						<div className="label">Total Elevation</div>
-						<div className="value">{elevMain}</div>
-						<div className="sub">{elevSub}</div>
+				<div className="grid grid-cols-2 max-[680px]:grid-cols-1 gap-2.5">
+					<div className="bg-chip border border-chip-border rounded-2xl p-3">
+						<div className="text-xs text-stat-label mb-1.5 flex items-center gap-2">
+							Total Elevation
+						</div>
+						<div className="text-base font-black text-stat-value leading-none">
+							{elevMain}
+						</div>
+						<div className="mt-1 text-[13px] text-stat-sub font-bold">
+							{elevSub}
+						</div>
 					</div>
 
-					<div className="pct-chip">
-						<div className="label">Total Time</div>
-						<div className="value">{fmtDuration(stats.totalMovingTimeS)}</div>
-						<div className="sub">
+					<div className="bg-chip border border-chip-border rounded-2xl p-3">
+						<div className="text-xs text-stat-label mb-1.5 flex items-center gap-2">
+							Total Time
+						</div>
+						<div className="text-base font-black text-stat-value leading-none">
+							{fmtDuration(stats.totalMovingTimeS)}
+						</div>
+						<div className="mt-1 text-[13px] text-stat-sub font-bold">
 							{stats.activityCount ? `${stats.activityCount} activities` : ""}
 						</div>
 					</div>
 
-					<div className="pct-chip">
-						<div className="label">Avg Distance / Activity</div>
-						<div className="value">
+					<div className="bg-chip border border-chip-border rounded-2xl p-3">
+						<div className="text-xs text-stat-label mb-1.5 flex items-center gap-2">
+							Avg Distance / Activity
+						</div>
+						<div className="text-base font-black text-stat-value leading-none">
 							{avgDistPerActKm != null
 								? `${fmtNumber(avgDistPerActKm, 1)} km`
 								: "\u2014"}
 						</div>
-						<div className="sub">
+						<div className="mt-1 text-[13px] text-stat-sub font-bold">
 							{avgDistPerActMi != null
 								? `${fmtNumber(avgDistPerActMi, 1)} mi`
 								: ""}
 						</div>
 					</div>
 
-					<div className="pct-chip">
-						<div className="label">Avg Speed</div>
-						<div className="value">
+					<div className="bg-chip border border-chip-border rounded-2xl p-3">
+						<div className="text-xs text-stat-label mb-1.5 flex items-center gap-2">
+							Avg Speed
+						</div>
+						<div className="text-base font-black text-stat-value leading-none">
 							{avgKmh != null ? `${fmtNumber(avgKmh, 1)} km/h` : "\u2014"}
 						</div>
-						<div className="sub">
+						<div className="mt-1 text-[13px] text-stat-sub font-bold">
 							{avgMph != null ? `${fmtNumber(avgMph, 1)} mi/h` : ""}
 						</div>
 					</div>

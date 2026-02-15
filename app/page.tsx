@@ -3,67 +3,53 @@ import Link from "next/link";
 export default function LandingPage() {
 	return (
 		<>
-			<header className="site-header">
-				<div
-					className="wrap"
-					style={{
-						display: "flex",
-						alignItems: "center",
-						justifyContent: "space-between",
-						gap: 12,
-						padding: "14px var(--pad)",
-					}}
-				>
-					<div className="brand">
-						<div className="brand-title">PCT Tracker</div>
+			<header className="sticky top-0 z-[1000] backdrop-blur-md bg-[rgba(11,14,17,0.75)] border-b border-line">
+				<div className="max-w-[980px] mx-auto px-4 flex items-center justify-between gap-3 py-3.5">
+					<div>
+						<div className="font-[750] tracking-tight">PCT Tracker</div>
 					</div>
-					<nav className="tabs">
-						<Link href="/faq" className="tab">
+					<nav className="flex gap-2 shrink-0">
+						<Link
+							href="/faq"
+							className="no-underline text-muted px-2.5 py-2 rounded-full border border-line bg-[rgba(17,22,28,0.35)]"
+						>
 							FAQ
 						</Link>
-						<Link href="/api/auth/strava" className="tab">
+						<Link
+							href="/api/auth/strava"
+							className="no-underline text-muted px-2.5 py-2 rounded-full border border-line bg-[rgba(17,22,28,0.35)]"
+						>
 							Login
 						</Link>
 					</nav>
 				</div>
 			</header>
 
-			<main className="wrap" style={{ paddingTop: 60, paddingBottom: 60 }}>
-				<div style={{ maxWidth: 560, margin: "0 auto", textAlign: "center" }}>
-					<h1
-						style={{
-							fontSize: 36,
-							fontWeight: 900,
-							lineHeight: 1.15,
-							marginBottom: 16,
-						}}
-					>
+			<main className="max-w-[980px] mx-auto px-4 pt-15 pb-15">
+				<div className="max-w-[560px] mx-auto text-center">
+					<h1 className="text-4xl font-black leading-tight mb-4">
 						Track your PCT hike
 					</h1>
-					<p
-						className="muted"
-						style={{ fontSize: 16, lineHeight: 1.55, marginBottom: 36 }}
-					>
+					<p className="text-muted text-base leading-relaxed mb-9">
 						Connect your Strava account and get a live map of your Pacific Crest
 						Trail progress. Share your public tracker with friends and family.
 					</p>
 					<Link
 						href="/api/auth/strava"
-						className="button"
-						style={{ fontSize: 16, padding: "14px 28px" }}
+						className="inline-block no-underline px-7 py-3.5 rounded-full border border-[rgba(126,231,135,0.35)] text-text bg-[rgba(126,231,135,0.1)] hover:bg-[rgba(126,231,135,0.18)] cursor-pointer text-base"
 					>
 						Get Started with Strava
 					</Link>
-					<p className="muted" style={{ fontSize: 14, marginTop: 16 }}>
+					<p className="text-muted text-sm mt-4">
 						or{" "}
-						<Link href="/tracker/jane-doe" style={{ color: "var(--accent)" }}>
+						<Link href="/tracker/jane-doe" className="text-accent">
 							see an example
 						</Link>
 					</p>
 
-					<div className="card" style={{ marginTop: 48, textAlign: "left" }}>
-						<div className="card-title">How it works</div>
-						<ol className="list" style={{ marginTop: 10, lineHeight: 1.8 }}>
+					<div className="bg-card border border-line rounded-2xl p-[18px] mt-12 text-left">
+						<div className="font-bold mb-1">How it works</div>
+						<ol className="m-0 pl-[18px] text-muted leading-relaxed">
 							<li>Connect your Strava account</li>
 							<li>Your PCT activities are synced automatically</li>
 							<li>
@@ -75,11 +61,11 @@ export default function LandingPage() {
 				</div>
 			</main>
 
-			<footer className="site-footer">
-				<div className="wrap">
+			<footer className="border-t border-line text-muted text-xs py-[18px] pb-7 text-center">
+				<div className="max-w-[980px] mx-auto px-4">
 					PCT Tracker &middot;{" "}
 					<a
-						href="https://github.com/nloomis/pct-tracker"
+						href="https://github.com/NoahMLoomis/pct-tracker"
 						target="_blank"
 						rel="noopener noreferrer"
 					>

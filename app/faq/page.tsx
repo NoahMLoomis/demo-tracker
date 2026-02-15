@@ -16,7 +16,7 @@ const faqs: { question: string; answer: ReactNode }[] = [
 			"How can i setup my garmin/coros watch to upload to strava automatically?",
 		answer: (
 			<>
-				For garmin, follow
+				For garmin, follow{" "}
 				<a
 					href="https://support.strava.com/hc/en-us/articles/216918057-Garmin-and-Strava"
 					target="_blank"
@@ -24,7 +24,7 @@ const faqs: { question: string; answer: ReactNode }[] = [
 				>
 					this guide
 				</a>
-				, for coros,
+				, for coros,{" "}
 				<a
 					href="https://support.strava.com/hc/en-us/articles/360007816051-COROS-and-Strava"
 					target="_blank"
@@ -80,7 +80,7 @@ const faqs: { question: string; answer: ReactNode }[] = [
 		answer: (
 			<>
 				Yes, PCT Tracker is completely free to use. With no ads, because ads
-				suck. It's also OSS, you can check out the source code on{" "}
+				suck. It&apos;s also OSS, you can check out the source code on{" "}
 				<a
 					href="https://github.com/NoahMLoomis/pct-tracker"
 					target="_blank"
@@ -156,40 +156,53 @@ const faqs: { question: string; answer: ReactNode }[] = [
 export default function FAQPage() {
 	return (
 		<>
-			<header className="site-header">
-				<div className="wrap header-inner">
-					<div className="brand">
-						<div className="brand-title">PCT Tracker</div>
+			<header className="sticky top-0 z-[1000] backdrop-blur-md bg-[rgba(11,14,17,0.75)] border-b border-line">
+				<div className="max-w-[980px] mx-auto px-4 flex items-center justify-between gap-3 py-3.5 max-[540px]:flex-col max-[540px]:items-start">
+					<div>
+						<div className="font-[750] tracking-tight">PCT Tracker</div>
 					</div>
-					<nav className="tabs">
-						<Link href="/" className="tab">
+					<nav className="flex gap-2 shrink-0">
+						<Link
+							href="/"
+							className="no-underline text-muted px-2.5 py-2 rounded-full border border-line bg-[rgba(17,22,28,0.35)]"
+						>
 							Home
 						</Link>
-						<Link href="/api/auth/strava" className="tab">
+						<Link
+							href="/api/auth/strava"
+							className="no-underline text-muted px-2.5 py-2 rounded-full border border-line bg-[rgba(17,22,28,0.35)]"
+						>
 							Login
 						</Link>
 					</nav>
 				</div>
 			</header>
 
-			<main className="wrap" style={{ paddingTop: 40, paddingBottom: 60 }}>
-				<div style={{ maxWidth: 700, margin: "0 auto" }}>
-					<h1 style={{ fontSize: 28, fontWeight: 900, marginBottom: 24 }}>
+			<main className="max-w-[980px] mx-auto px-4 pt-10 pb-15">
+				<div className="max-w-[700px] mx-auto">
+					<h1 className="text-[28px] font-black mb-6">
 						Frequently Asked Questions
 					</h1>
-					<div className="faq-list">
+					<div className="grid gap-2">
 						{faqs.map((faq, i) => (
-							<details key={i} className="faq-item">
-								<summary className="faq-question">{faq.question}</summary>
-								<div className="faq-answer">{faq.answer}</div>
+							<details
+								key={i}
+								className="group bg-card-light border border-line rounded-2xl overflow-hidden"
+							>
+								<summary className="px-[18px] py-4 font-bold text-[15px] cursor-pointer list-none flex items-center justify-between gap-3 [&::-webkit-details-marker]:hidden after:content-['+'] after:text-xl after:font-normal after:text-muted after:shrink-0 after:transition-transform after:duration-200 group-open:after:content-['\2212']">
+									{faq.question}
+								</summary>
+								<div className="px-[18px] pb-4 text-[rgba(232,238,245,0.8)] leading-[1.7] text-sm">
+									{faq.answer}
+								</div>
 							</details>
 						))}
 					</div>
 				</div>
 			</main>
 
-			<footer className="site-footer">
-				<div className="wrap">
+			<footer className="border-t border-line text-muted text-xs py-[18px] pb-7 text-center">
+				<div className="max-w-[980px] mx-auto px-4">
 					PCT Tracker &middot;{" "}
 					<a
 						href="https://github.com/NoahMLoomis/pct-tracker"

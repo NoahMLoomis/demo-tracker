@@ -27,7 +27,6 @@ export async function GET(request: NextRequest) {
 				error: err instanceof Error ? err.message : "Unknown error",
 			});
 		}
-		// Stagger syncs to respect Strava rate limits
 		await new Promise((r) => setTimeout(r, 2000));
 	}
 

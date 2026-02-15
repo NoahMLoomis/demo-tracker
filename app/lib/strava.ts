@@ -16,7 +16,6 @@ export async function refreshAccessToken(userId: string): Promise<string> {
 
 	if (!user) throw new Error("User not found");
 
-	// If token is still valid, return it
 	if (user.strava_token_expires_at) {
 		const expiresAt = new Date(user.strava_token_expires_at).getTime();
 		if (Date.now() < expiresAt - 60_000) {

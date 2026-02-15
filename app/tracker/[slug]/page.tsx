@@ -29,7 +29,7 @@ export default function TrackerPage() {
 	return (
 		<>
 			<MapView slug={slug} updates={updates} />
-			<div className="grid">
+			<div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
 				<StatsPanel stats={stats} />
 				<InsightsPanel stats={stats} />
 			</div>

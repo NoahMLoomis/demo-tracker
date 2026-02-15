@@ -8,16 +8,8 @@ const LocationPicker = dynamic(() => import("@/components/LocationPicker"), {
 	ssr: false,
 });
 
-const inputStyle = {
-	display: "block" as const,
-	width: "100%",
-	marginTop: 4,
-	padding: "8px 10px",
-	borderRadius: 10,
-	border: "1px solid var(--line)",
-	background: "var(--card)",
-	color: "var(--text)",
-};
+const inputCls =
+	"block w-full mt-1 px-2.5 py-2 rounded-[10px] border border-line bg-card text-text";
 
 interface DashboardClientProps {
 	user: User;
@@ -44,11 +36,9 @@ export default function DashboardClient({
 	const [saveError, setSaveError] = useState<string | null>(null);
 	const [syncResult, setSyncResult] = useState<string | null>(null);
 
-	// Track original dates to detect changes
 	const [savedStartDate] = useState(user.hike_start_date || "");
 	const [savedEndDate] = useState(user.hike_end_date || "");
 
-	// Updates state
 	const [updates, setUpdates] = useState<TrailUpdate[]>(initialUpdates);
 	const [editingId, setEditingId] = useState<string | null>(null);
 	const [title, setTitle] = useState("");
@@ -85,7 +75,6 @@ export default function DashboardClient({
 				return;
 			}
 
-			// Sync if dates changed
 			const datesChanged =
 				hikeStartDate !== savedStartDate ||
 				(hikeEndDate || "") !== savedEndDate;
@@ -202,115 +191,100 @@ export default function DashboardClient({
 				setUpdates((prev) => prev.filter((u) => u.id !== id));
 				if (editingId === id) resetUpdateForm();
 			}
-		} catch {
-			// silently fail
-		}
+		} catch {}
 	};
 
+	const dirBtnCls = (active: boolean) =>
+		`inline-block no-underline px-5 py-2.5 rounded-full border cursor-pointer font-semibold ${
+			active
+				? "bg-accent text-[#0d1117] border-accent font-bold"
+				: "bg-card text-text border-line"
+		}`;
+
 	return (
-		<div style={{ display: "grid", gap: 14, maxWidth: 600 }}>
-			<div className="card">
-				<p style={{ marginTop: 8 }}>
+		<div className="grid gap-3.5 max-w-[600px]">
+			<div className="bg-card border border-line rounded-2xl p-[18px]">
+				<p className="mt-2">
 					<strong>{user.display_name}</strong>
 				</p>
-				<p className="muted small" style={{ marginTop: 4 }}>
+				<p className="text-muted text-xs mt-1">
 					Strava Athlete ID: {user.strava_athlete_id}
 				</p>
-				<p style={{ marginTop: 12 }}>
+				<p className="mt-3">
 					Public tracker url:{" "}
-					<a href={`/tracker/${user.slug}`} target="_blank" className="accent">
+					<a
+						href={`/tracker/${user.slug}`}
+						target="_blank"
+						className="text-accent"
+					>
 						{process.env.NEXT_PUBLIC_BASE_URL}/tracker/{user.slug}
 					</a>
 				</p>
 			</div>
 
-			<div className="card">
-				<div className="card-title">Settings</div>
-				<div style={{ display: "grid", gap: 12, marginTop: 12 }}>
+			<div className="bg-card border border-line rounded-2xl p-[18px]">
+				<div className="font-bold mb-1.5">Settings</div>
+				<div className="grid gap-3 mt-3">
 					<div>
-						<span className="muted small">Direction *</span>
-						<div style={{ display: "flex", gap: 8, marginTop: 6 }}>
+						<span className="text-muted text-xs">Direction *</span>
+						<div className="flex gap-2 mt-1.5">
 							<button
 								type="button"
 								onClick={() => setDirection("NOBO")}
-								className="button"
-								style={{
-									background:
-										direction === "NOBO" ? "var(--accent)" : "var(--card)",
-									color: direction === "NOBO" ? "#0d1117" : "var(--text)",
-									border: "1px solid var(--line)",
-									fontWeight: direction === "NOBO" ? 700 : 400,
-								}}
+								className={dirBtnCls(direction === "NOBO")}
 							>
 								NOBO
 							</button>
 							<button
 								type="button"
 								onClick={() => setDirection("SOBO")}
-								className="button"
-								style={{
-									background:
-										direction === "SOBO" ? "var(--accent)" : "var(--card)",
-									color: direction === "SOBO" ? "#0d1117" : "var(--text)",
-									border: "1px solid var(--line)",
-									fontWeight: direction === "SOBO" ? 700 : 400,
-								}}
+								className={dirBtnCls(direction === "SOBO")}
 							>
 								SOBO
 							</button>
 						</div>
 					</div>
 					<label>
-						<span className="muted small">Hike Start Date *</span>
+						<span className="text-muted text-xs">Hike Start Date *</span>
 						<input
 							type="date"
 							value={hikeStartDate}
 							required
 							onChange={(e) => setHikeStartDate(e.target.value)}
-							style={inputStyle}
+							className={inputCls}
 						/>
-						<p
-							className="muted small"
-							style={{ marginTop: 6, lineHeight: 1.5 }}
-						>
+						<p className="text-muted text-xs mt-1.5 leading-relaxed">
 							Activities will be synced from this date until the end date (or 6
 							months after if no end date is set).
 						</p>
 					</label>
 					<label>
-						<span className="muted small">Hike End Date</span>
+						<span className="text-muted text-xs">Hike End Date</span>
 						<input
 							type="date"
 							value={hikeEndDate}
 							onChange={(e) => setHikeEndDate(e.target.value)}
-							style={inputStyle}
+							className={inputCls}
 						/>
-						<p
-							className="muted small"
-							style={{ marginTop: 6, lineHeight: 1.5 }}
-						>
+						<p className="text-muted text-xs mt-1.5 leading-relaxed">
 							Optional. Leave blank to default to 6 months after the start date.
 						</p>
 					</label>
 					<div>
 						<label>
-							<span className="muted small">Lighterpack code</span>
+							<span className="text-muted text-xs">Lighterpack code</span>
 							<input
 								type="text"
 								value={lighterpackUrl}
 								onChange={(e) => setLighterpackUrl(e.target.value)}
 								placeholder="e52c1t"
-								style={inputStyle}
+								className={inputCls}
 							/>
 						</label>
-						<p
-							className="muted small"
-							style={{ marginTop: 6, lineHeight: 1.5 }}
-						>
+						<p className="text-muted text-xs mt-1.5 leading-relaxed">
 							To get your shareable link, open your list on lighterpack.com,
-							hover over the{" "}
-							<strong style={{ color: "var(--text)" }}>Share</strong> button in
-							the top-right, and copy the code after the{" "}
+							hover over the <strong className="text-text">Share</strong> button
+							in the top-right, and copy the code after the{" "}
 							<code>&quot;id=&quot;</code>
 							<br />
 							Ex: <code>&quot;...div id=&quot;e52c1t&quot;</code>, e52c1t would
@@ -320,16 +294,13 @@ export default function DashboardClient({
 					<button
 						onClick={handleSave}
 						disabled={saving || hikeStartDate.length <= 0}
-						className="button"
-						style={{ justifySelf: "start" }}
+						className="inline-block no-underline px-5 py-2.5 rounded-full border border-[rgba(126,231,135,0.35)] text-text bg-[rgba(126,231,135,0.1)] hover:bg-[rgba(126,231,135,0.18)] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed justify-self-start"
 					>
 						{saving ? "Saving..." : "Save Settings"}
 					</button>
-					{saveError && (
-						<p style={{ fontSize: 14, color: "#ff6b6b" }}>{saveError}</p>
-					)}
-					{syncResult && <p style={{ fontSize: 14 }}>{syncResult}</p>}
-					<p className="muted small">
+					{saveError && <p className="text-sm text-danger">{saveError}</p>}
+					{syncResult && <p className="text-sm">{syncResult}</p>}
+					<p className="text-muted text-xs">
 						Last sync: {syncState?.last_sync_at || "Never"}
 						{syncState?.status && syncState.status !== "idle"
 							? ` (${syncState.status})`
@@ -338,26 +309,24 @@ export default function DashboardClient({
 				</div>
 			</div>
 
-			<div className="card">
-				<div className="card-title">
+			<div className="bg-card border border-line rounded-2xl p-[18px]">
+				<div className="font-bold mb-1.5">
 					{editingId ? "Edit Update" : "New Trail Update"}
 				</div>
-				<div style={{ display: "grid", gap: 12, marginTop: 12 }}>
+				<div className="grid gap-3 mt-3">
 					<label>
-						<span className="muted small">Title *</span>
+						<span className="text-muted text-xs">Title *</span>
 						<input
 							type="text"
 							value={title}
 							onChange={(e) => setTitle(e.target.value)}
-							style={inputStyle}
+							className={inputCls}
 						/>
 					</label>
 					<label>
-						<span className="muted small">
+						<span className="text-muted text-xs">
 							Body *{" "}
-							<span
-								style={{ color: body.length > 500 ? "#ff6b6b" : "inherit" }}
-							>
+							<span className={body.length > 500 ? "text-danger" : ""}>
 								({body.length}/500)
 							</span>
 						</span>
@@ -366,18 +335,11 @@ export default function DashboardClient({
 							onChange={(e) => setBody(e.target.value)}
 							rows={5}
 							maxLength={500}
-							style={{ ...inputStyle, resize: "vertical" as const }}
+							className={`${inputCls} resize-y`}
 						/>
 					</label>
 					<div>
-						<label
-							style={{
-								display: "flex",
-								alignItems: "center",
-								gap: 8,
-								cursor: "pointer",
-							}}
-						>
+						<label className="flex items-center gap-2 cursor-pointer">
 							<input
 								type="checkbox"
 								checked={addLocation}
@@ -388,13 +350,13 @@ export default function DashboardClient({
 										setLon(null);
 									}
 								}}
-								style={{ accentColor: "var(--accent)" }}
+								className="accent-accent"
 							/>
-							<span className="muted small">Add location</span>
+							<span className="text-muted text-xs">Add location</span>
 						</label>
 						{addLocation && (
 							<>
-								<p className="muted small" style={{ marginTop: 6 }}>
+								<p className="text-muted text-xs mt-1.5">
 									Click the map to drop a pin.
 								</p>
 								<LocationPicker
@@ -408,11 +370,11 @@ export default function DashboardClient({
 							</>
 						)}
 					</div>
-					<div style={{ display: "flex", gap: 8 }}>
+					<div className="flex gap-2">
 						<button
 							onClick={handleUpdateSubmit}
 							disabled={updSaving || !title.trim() || !body.trim()}
-							className="button"
+							className="inline-block no-underline px-5 py-2.5 rounded-full border border-[rgba(126,231,135,0.35)] text-text bg-[rgba(126,231,135,0.1)] hover:bg-[rgba(126,231,135,0.18)] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
 						>
 							{updSaving
 								? "Saving..."
@@ -423,91 +385,49 @@ export default function DashboardClient({
 						{editingId && (
 							<button
 								onClick={resetUpdateForm}
-								className="button"
-								style={{
-									background: "var(--card)",
-									border: "1px solid var(--line)",
-								}}
+								className="inline-block px-5 py-2.5 rounded-full bg-card border border-line cursor-pointer"
 							>
 								Cancel
 							</button>
 						)}
 					</div>
-					{updError && (
-						<p style={{ fontSize: 14, color: "#ff6b6b" }}>{updError}</p>
-					)}
+					{updError && <p className="text-sm text-danger">{updError}</p>}
 				</div>
 
 				{updates.length > 0 && (
-					<div
-						style={{
-							marginTop: 20,
-							borderTop: "1px solid var(--line)",
-							paddingTop: 16,
-						}}
-					>
-						<div className="muted small" style={{ marginBottom: 10 }}>
-							Your Updates
-						</div>
-						<div style={{ display: "grid", gap: 10 }}>
+					<div className="mt-5 border-t border-line pt-4">
+						<div className="text-muted text-xs mb-2.5">Your Updates</div>
+						<div className="grid gap-2.5">
 							{updates.map((u) => (
 								<div
 									key={u.id}
-									style={{
-										padding: "10px 12px",
-										borderRadius: 10,
-										background: "rgba(255,255,255,0.03)",
-										border: "1px solid var(--line)",
-									}}
+									className="px-3 py-2.5 rounded-[10px] bg-[rgba(255,255,255,0.03)] border border-line"
 								>
-									<div
-										style={{
-											display: "flex",
-											justifyContent: "space-between",
-											alignItems: "flex-start",
-											gap: 8,
-										}}
-									>
+									<div className="flex justify-between items-start gap-2">
 										<div>
-											<div style={{ fontWeight: 700 }}>{u.title}</div>
-											<div className="muted small" style={{ marginTop: 2 }}>
+											<div className="font-bold">{u.title}</div>
+											<div className="text-muted text-xs mt-0.5">
 												{u.created_at.slice(0, 10)}
 												{u.lat != null &&
 													u.lon != null &&
 													" \u00B7 Has location"}
 											</div>
-											<div className="muted small" style={{ marginTop: 4 }}>
+											<div className="text-muted text-xs mt-1">
 												{u.body.length > 120
 													? u.body.slice(0, 120) + "..."
 													: u.body}
 											</div>
 										</div>
-										<div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+										<div className="flex gap-1.5 shrink-0">
 											<button
 												onClick={() => handleEditClick(u)}
-												style={{
-													padding: "4px 10px",
-													borderRadius: 8,
-													border: "1px solid var(--line)",
-													background: "var(--card)",
-													color: "var(--text)",
-													cursor: "pointer",
-													fontSize: 13,
-												}}
+												className="px-2.5 py-1 rounded-lg border border-line bg-card text-text cursor-pointer text-[13px]"
 											>
 												Edit
 											</button>
 											<button
 												onClick={() => handleDelete(u.id)}
-												style={{
-													padding: "4px 10px",
-													borderRadius: 8,
-													border: "1px solid var(--line)",
-													background: "var(--card)",
-													color: "#ff6b6b",
-													cursor: "pointer",
-													fontSize: 13,
-												}}
+												className="px-2.5 py-1 rounded-lg border border-line bg-card text-danger cursor-pointer text-[13px]"
 											>
 												Delete
 											</button>

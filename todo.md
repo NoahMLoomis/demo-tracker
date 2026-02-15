@@ -20,7 +20,6 @@
 
 ### Priority 1
 - **GPX file upload** — Allow users to upload their own GPX files instead of having to use strava.
-- **Migrate from CSS to Tailwind** 
 - **Photo support** — Allow users to attach photos to updates 
 - **Email notifications** — Let followers subscribe to a hiker's tracker and receive email updates when new trail updates are posted
 - **Elevation profile chart** — Display an elevation chart of the PCT showing the hiker's current position

@@ -15,7 +15,6 @@ export async function POST(request: NextRequest) {
 		updated_at: new Date().toISOString(),
 	};
 
-	// Hike start date is required
 	if (
 		typeof body.hike_start_date !== "string" ||
 		!body.hike_start_date.trim()

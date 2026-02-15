@@ -7,7 +7,6 @@ export async function syncUser(
 ): Promise<{ added: number; skipped: number }> {
 	const supabase = createServiceClient();
 
-	// Mark as syncing
 	await supabase.from("sync_state").upsert({
 		user_id: userId,
 		status: "syncing",
@@ -15,7 +14,6 @@ export async function syncUser(
 	});
 
 	try {
-		// Get user's date range for fetching activities
 		const { data: user } = await supabase
 			.from("users")
 			.select("hike_start_date, hike_end_date")
@@ -38,7 +36,6 @@ export async function syncUser(
 			}
 		}
 
-		// Delete activities outside the current date range
 		if (after != null) {
 			await supabase
 				.from("activity_stats")
@@ -58,7 +55,6 @@ export async function syncUser(
 		const activities = await fetchActivities(accessToken, after, before);
 		activities.sort((a, b) => a.start_date.localeCompare(b.start_date));
 
-		// Get existing strava_ids to skip
 		const { data: existing } = await supabase
 			.from("activity_stats")
 			.select("strava_id")
@@ -75,7 +71,6 @@ export async function syncUser(
 				continue;
 			}
 
-			// PCT proximity check using start_latlng
 			if (act.start_latlng && act.start_latlng.length === 2) {
 				if (!isNearPct(act.start_latlng[0], act.start_latlng[1])) {
 					skipped++;
@@ -100,7 +95,6 @@ export async function syncUser(
 			added++;
 		}
 
-		// Update latest position from the most recent PCT activity with end_latlng
 		const withEnd = [...activities]
 			.reverse()
 			.find(
